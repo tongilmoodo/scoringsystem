@@ -1,6 +1,6 @@
-# Mombasa Open Tong-Il Moo-Do Scoring System
+# Tong-Il Moo-Do Scoring System
 
-Live tournament scoring for 2 concurrent courts with real-time public scoreboards, bracket management, AI voice scoring, and multi-language support.
+Multi-tournament live scoring platform for Tong-Il Moo-Do events: 2 concurrent courts per tournament, 4-judge consensus scoring, real-time public scoreboards, bracket management, AI voice scoring, and multi-language support. Any number of tournaments can run on one deployment, each addressed by its URL slug (`/t/[slug]/...`) with tournament-scoped PINs.
 
 **Stack:** Next.js 14 (App Router) - TypeScript - Tailwind CSS - Supabase (PostgreSQL + Realtime + Auth) - Google Gemini - Vercel
 
@@ -88,12 +88,12 @@ Open http://localhost:3000, generate a bracket at `/admin/draw`, assign matches 
 
 | Route | Purpose | Auth |
 | --- | --- | --- |
-| `/` | Landing page with links | none |
-| `/scoreboard` | Both courts, live, auto-translated | none |
-| `/scoreboard/1`, `/scoreboard/2` | Single-court TV display | none |
-| `/bracket` | Live public bracket | none |
-| `/judge/1`, `/judge/2` | Corner judge voting tablet | judge PIN (court-matched) |
-| `/controller/1`, `/controller/2` | Controller: timer, vote monitor, overrides | controller PIN (court-matched) |
+| `/` | Tournament directory with links | none |
+| `/t/[slug]/scoreboard` | All courts, live, auto-translated | none |
+| `/t/[slug]/scoreboard/1`, `.../2` | Single-court TV display | none |
+| `/t/[slug]/bracket` | Live public bracket | none |
+| `/t/[slug]/judge/1`, `.../2` | Corner judge voting tablet (point values only) | judge PIN (tournament + court) |
+| `/t/[slug]/controller/1`, `.../2` | Controller: timer, rounds/breaks, takedown, vote monitor, overrides | controller PIN (tournament + court) |
 | `/admin` | Dashboard, override, assignment | admin PIN |
 | `/admin/draw` | Draw generation and bracket publishing | admin PIN |
 | `/admin/matches` | Match table, filters, reset, print sheets | admin PIN |

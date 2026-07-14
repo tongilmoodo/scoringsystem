@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
+import { useActiveTournament } from '@/lib/useTournament';
 import PinPad from '@/components/PinPad';
 import { countryName, getFlagEmoji } from '@/lib/countries';
 import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match } from '@/lib/types';
@@ -13,15 +14,22 @@ const STATUSES = ['scheduled', 'assigned', 'live', 'paused', 'completed'] as con
 
 export default function MatchesPage() {
   const { user, ready, login, logout } = useAuth();
+  const { tournament, ready: tournamentReady } = useActiveTournament();
   const [matches, setMatches] = useState<Match[]>([]);
   const [roundFilter, setRoundFilter] = useState('');
   const [courtFilter, setCourtFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
   const load = useCallback(async () => {
-    const { data } = await supabase.from('matches').select(ATHLETE_SELECT).order('match_number');
+    if (!tournament) return;
+    const { data } = await supabase
+      .from('matches')
+      .select(ATHLETE_SELECT)
+      .eq('tournament_id', tournament.id)
+      .order('match_number');
     setMatches((data ?? []) as Match[]);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tournament?.id]);
 
   useEffect(() => {
     if (user?.role === 'admin') load();
@@ -60,8 +68,8 @@ export default function MatchesPage() {
       .eq('id', m.id);
   }
 
-  if (!ready) return null;
-  if (!user) return <PinPad title="Admin Login" onSubmit={login} />;
+  if (!ready || !tournamentReady) return null;
+  if (!user) return <PinPad title="Admin Login" onSubmit={(pin) => login(pin)} />;
   if (user.role !== 'admin') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-4">
@@ -82,6 +90,15 @@ export default function MatchesPage() {
     m.winner_id === m.blue_athlete_id ? m.blue?.name : m.winner_id === m.red_athlete_id ? m.red?.name : '';
 
   const select = 'rounded-lg border border-gray-700 bg-gray-800 px-3 py-2';
+
+  if (!tournament) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <p className="text-xl">No tournament selected.</p>
+        <Link href="/admin" className="rounded-lg bg-gray-700 px-6 py-3 font-bold">Choose a tournament</Link>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 p-6">
@@ -168,7 +185,7 @@ export default function MatchesPage() {
         {filtered.map((m) => (
           <div key={m.id} className="print-sheet">
             <h1 style={{ fontSize: 20, fontWeight: 900, textAlign: 'center' }}>
-              Mombasa Open Tong-Il Moo-Do — Official Match Sheet
+              {tournament.name} &mdash; Official Match Sheet
             </h1>
             <p style={{ textAlign: 'center', marginBottom: 16 }}>
               {ROUND_LABELS[m.round]} · Match #{m.match_number} · Court{' '}

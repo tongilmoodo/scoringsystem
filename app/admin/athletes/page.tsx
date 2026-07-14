@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
+import { useActiveTournament } from '@/lib/useTournament';
 import PinPad from '@/components/PinPad';
 import CountrySelect from '@/components/CountrySelect';
 import { countryName, getFlagEmoji, resolveCountry } from '@/lib/countries';
@@ -27,6 +28,7 @@ const EMPTY = { name: '', team: '', country_code: '', event_id: '', seed: '' };
 
 export default function AthletesPage() {
   const { user, ready, login, logout } = useAuth();
+  const { tournament, ready: tournamentReady } = useActiveTournament();
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [form, setForm] = useState(EMPTY);
@@ -35,13 +37,21 @@ export default function AthletesPage() {
   const [preview, setPreview] = useState<PreviewRow[] | null>(null);
 
   const load = useCallback(async () => {
-    const [{ data: ath }, { data: evs }] = await Promise.all([
-      supabase.from('athletes').select('*').order('created_at'),
-      supabase.from('events').select('id, name').order('created_at'),
-    ]);
+    if (!tournament) return;
+    const { data: evs } = await supabase
+      .from('events')
+      .select('id, name')
+      .eq('tournament_id', tournament.id)
+      .order('created_at');
+    const evList = (evs ?? []) as EventRow[];
+    setEvents(evList);
+    const ids = evList.map((e) => e.id);
+    const { data: ath } = ids.length
+      ? await supabase.from('athletes').select('*').in('event_id', ids).order('created_at')
+      : { data: [] };
     setAthletes((ath ?? []) as Athlete[]);
-    setEvents((evs ?? []) as EventRow[]);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tournament?.id]);
 
   useEffect(() => {
     if (user?.role === 'admin') load();
@@ -133,8 +143,8 @@ export default function AthletesPage() {
     file.text().then(setCsvText);
   }
 
-  if (!ready) return null;
-  if (!user) return <PinPad title="Admin Login" onSubmit={login} />;
+  if (!ready || !tournamentReady) return null;
+  if (!user) return <PinPad title="Admin Login" onSubmit={(pin) => login(pin)} />;
   if (user.role !== 'admin') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-4">
@@ -145,6 +155,15 @@ export default function AthletesPage() {
   }
 
   const input = 'rounded-lg border border-gray-700 bg-gray-800 px-3 py-2';
+
+  if (!tournament) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <p className="text-xl">No tournament selected.</p>
+        <Link href="/admin" className="rounded-lg bg-gray-700 px-6 py-3 font-bold">Choose a tournament</Link>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-6 p-6">

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
+import { useActiveTournament } from '@/lib/useTournament';
 import PinPad from '@/components/PinPad';
 import BracketView from '@/components/BracketView';
 import { generateBracket } from '@/lib/utils/bracket';
@@ -17,6 +18,7 @@ interface EventRow {
 
 export default function DrawPage() {
   const { user, ready, login, logout } = useAuth();
+  const { tournament, ready: tournamentReady } = useActiveTournament();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
@@ -25,13 +27,21 @@ export default function DrawPage() {
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const [{ data: evs }, { data: ath }] = await Promise.all([
-      supabase.from('events').select('id, name, status').order('created_at'),
-      supabase.from('athletes').select('*'),
-    ]);
-    setEvents((evs ?? []) as EventRow[]);
+    if (!tournament) return;
+    const { data: evs } = await supabase
+      .from('events')
+      .select('id, name, status')
+      .eq('tournament_id', tournament.id)
+      .order('created_at');
+    const evList = (evs ?? []) as EventRow[];
+    setEvents(evList);
+    const ids = evList.map((e) => e.id);
+    const { data: ath } = ids.length
+      ? await supabase.from('athletes').select('*').in('event_id', ids)
+      : { data: [] };
     setAthletes((ath ?? []) as Athlete[]);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tournament?.id]);
 
   const loadMatches = useCallback(async () => {
     if (!selected) return setMatches([]);
@@ -88,8 +98,8 @@ export default function DrawPage() {
     load();
   }
 
-  if (!ready) return null;
-  if (!user) return <PinPad title="Admin Login" onSubmit={login} />;
+  if (!ready || !tournamentReady) return null;
+  if (!user) return <PinPad title="Admin Login" onSubmit={(pin) => login(pin)} />;
   if (user.role !== 'admin') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-4">
@@ -99,10 +109,19 @@ export default function DrawPage() {
     );
   }
 
+  if (!tournament) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <p className="text-xl">No tournament selected.</p>
+        <Link href="/admin" className="rounded-lg bg-gray-700 px-6 py-3 font-bold">Choose a tournament</Link>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black">Draw &amp; Bracket</h1>
+        <h1 className="text-2xl font-black">{tournament.name} &middot; Draw &amp; Bracket</h1>
         <Link href="/admin" className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-bold">← Dashboard</Link>
       </div>
 

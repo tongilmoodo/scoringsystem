@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
+import { useActiveTournament } from '@/lib/useTournament';
 import PinPad from '@/components/PinPad';
 import Flag from '@/components/Flag';
 import { countryName, getFlagEmoji } from '@/lib/countries';
@@ -18,23 +19,27 @@ interface MedalRow {
 
 export default function ResultsPage() {
   const { user, ready, login, logout } = useAuth();
+  const { tournament, ready: tournamentReady } = useActiveTournament();
   const [completed, setCompleted] = useState<Match[]>([]);
 
   const load = useCallback(async () => {
+    if (!tournament) return;
     const { data } = await supabase
       .from('matches')
       .select(ATHLETE_SELECT)
+      .eq('tournament_id', tournament.id)
       .eq('status', 'completed')
       .order('match_number');
     setCompleted((data ?? []) as Match[]);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tournament?.id]);
 
   useEffect(() => {
     if (user?.role === 'admin') load();
   }, [user, load]);
 
-  if (!ready) return null;
-  if (!user) return <PinPad title="Admin Login" onSubmit={login} />;
+  if (!ready || !tournamentReady) return null;
+  if (!user) return <PinPad title="Admin Login" onSubmit={(pin) => login(pin)} />;
   if (user.role !== 'admin') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-4">
@@ -93,6 +98,15 @@ export default function ResultsPage() {
     a.download = 'mombasa-open-results.csv';
     a.click();
     URL.revokeObjectURL(a.href);
+  }
+
+  if (!tournament) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <p className="text-xl">No tournament selected.</p>
+        <Link href="/admin" className="rounded-lg bg-gray-700 px-6 py-3 font-bold">Choose a tournament</Link>
+      </main>
+    );
   }
 
   return (
