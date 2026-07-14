@@ -83,9 +83,10 @@ export default function AuditPage() {
     <main className="flex flex-col gap-4 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-headline text-2xl font-bold uppercase tracking-widest">Audit &amp; Logs</h1>
-        <div className="flex gap-2 text-sm">
+        <div className="flex gap-2 text-sm no-print">
           <button onClick={() => exportData('csv')} className="rounded-lg bg-white/10 px-4 py-2 font-bold">Export CSV</button>
           <button onClick={() => exportData('json')} className="rounded-lg bg-white/10 px-4 py-2 font-bold">Export JSON</button>
+          <button onClick={() => window.print()} className="rounded-lg bg-white/10 px-4 py-2 font-bold">Print / PDF</button>
         </div>
       </div>
 
