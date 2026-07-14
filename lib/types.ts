@@ -2,6 +2,17 @@ export type Side = 'blue' | 'red';
 export type Role = 'admin' | 'controller' | 'judge';
 export type ScoreActionType = 'point_1' | 'point_2' | 'point_3' | 'foul';
 
+export interface Tournament {
+  id: string;
+  name: string;
+  slug: string;
+  location: string | null;
+  date: string | null;
+  status: 'upcoming' | 'live' | 'completed';
+  courts_count: number;
+  logo_url?: string | null;
+}
+
 export interface Athlete {
   id: string;
   event_id: string;
@@ -16,6 +27,7 @@ export interface Athlete {
 export interface Match {
   id: string;
   event_id: string;
+  tournament_id: string | null;
   court_number: number | null;
   round: 'round_of_32' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'third_place' | 'final';
   match_number: number;
@@ -33,6 +45,10 @@ export interface Match {
   timer_started_at: string | null;
   timer_paused_at?: string | null;
   judges_locked: boolean;
+  current_round: number;
+  break_duration_seconds: number | null;
+  break_ends_at: string | null;
+  takedown_ends_at: string | null;
   next_match_id: string | null;
   next_match_position: Side | null;
   blue?: Athlete | null;
@@ -58,18 +74,20 @@ export interface ScoreEvent {
   action_type: ScoreActionType | 'win_blue' | 'win_red';
   points: number;
   match_time_seconds: number | null;
+  takedown: boolean;
   scored_by: string | null;
   created_at: string;
 }
 
 export interface CastVoteResult {
   committed: boolean;
-  error?: 'already_voted' | 'locked' | 'match_completed';
+  error?: 'already_voted' | 'locked' | 'match_completed' | 'break';
   action?: string;
   votes?: number;
   top_action?: string;
   top_votes?: number;
   side?: Side;
+  takedown?: boolean;
 }
 
 export const ROUND_LABELS: Record<Match['round'], string> = {
@@ -81,10 +99,19 @@ export const ROUND_LABELS: Record<Match['round'], string> = {
   final: 'Final',
 };
 
+// Controller/admin-facing labels (technique detail is allowed here).
 export const ACTION_LABELS: Record<ScoreActionType, string> = {
   point_1: '+1 Punch',
   point_2: '+2 Kick',
   point_3: '+3 Spin',
+  foul: 'Foul',
+};
+
+// Judge-facing labels: POINT VALUE ONLY, no technique names.
+export const JUDGE_LABELS: Record<ScoreActionType, string> = {
+  point_1: '1 Point',
+  point_2: '2 Points',
+  point_3: '3 Points',
   foul: 'Foul',
 };
 

@@ -8,6 +8,7 @@ export interface AppUser {
   name: string;
   role: 'admin' | 'controller' | 'judge';
   court_access: number | null;
+  tournament_id: string | null;
 }
 
 const STORAGE_KEY = 'app_user';
@@ -26,11 +27,12 @@ export function useAuth() {
     setReady(true);
   }, []);
 
-  async function login(pin: string): Promise<string | null> {
+  /** slug scopes the PIN lookup to a tournament (required on /t/[slug]/... routes). */
+  async function login(pin: string, slug?: string): Promise<string | null> {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin }),
+      body: JSON.stringify({ pin, slug }),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));

@@ -1,15 +1,30 @@
-// Creates Supabase auth users + rows in public.users for the demo PINs.
-// Usage: NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/seed-users.mjs
+// Creates Supabase auth users + rows in public.users for the demo PINs,
+// SCOPED TO A TOURNAMENT. PINs are per-tournament: the derived auth email
+// includes the tournament slug so the same PIN can exist in many tournaments.
+// Usage:
+//   NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... TOURNAMENT_SLUG=mombasa-open-2026 node scripts/seed-users.mjs
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const slug = process.env.TOURNAMENT_SLUG ?? 'mombasa-open-2026';
 if (!url || !key) {
   console.error('Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
   process.exit(1);
 }
 const admin = createClient(url, key);
+
+const { data: tournament, error: tErr } = await admin
+  .from('tournaments')
+  .select('id, name')
+  .eq('slug', slug)
+  .maybeSingle();
+if (tErr || !tournament) {
+  console.error(`Tournament with slug "${slug}" not found. Create it first (or run schema.sql).`);
+  process.exit(1);
+}
+console.log(`Seeding users for tournament: ${tournament.name} (${slug})`);
 
 const USERS = [
   { name: 'Tournament Director', pin: '800811', role: 'admin', court_access: null },
@@ -26,8 +41,8 @@ const USERS = [
 ];
 
 for (const u of USERS) {
-  const email = `pin_${u.pin}@system.local`;
-  // Supabase requires passwords >= 6 chars; short PINs are padded with zeros.
+  // Tournament-scoped derived email keeps PINs reusable across tournaments.
+  const email = `pin_${slug}_${u.pin}@system.local`;
   const password = u.pin.padEnd(6, '0');
   const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) {
@@ -36,6 +51,7 @@ for (const u of USERS) {
   }
   const { error: dbError } = await admin.from('users').insert({
     id: data.user.id,
+    tournament_id: tournament.id,
     name: u.name,
     pin_hash: bcrypt.hashSync(u.pin, 10),
     role: u.role,
