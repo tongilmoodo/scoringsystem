@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
 import { useActiveTournament, type ActiveTournament } from '@/lib/useTournament';
 import PinPad from '@/components/PinPad';
+import Logo from '@/components/ui/Logo';
 import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match, type ScoreEvent, type Tournament } from '@/lib/types';
 
 function slugify(name: string) {
@@ -171,11 +172,17 @@ export default function AdminPage() {
   const courts = Array.from({ length: tournament.courts_count }, (_, i) => i + 1);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black">{tournament.name}</h1>
-          <p className="text-sm text-gray-400">/t/{tournament.slug} &middot; Admin dashboard</p>
+    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 bg-navy p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+        <div className="flex items-center gap-3">
+          <Logo size={40} />
+          <div>
+            <h1 className="font-headline text-2xl font-bold uppercase tracking-widest">{tournament.name}</h1>
+            <p className="flex items-center gap-2 text-sm text-text-muted">
+              <span className="h-2.5 w-2.5 rounded-full bg-success animate-live-pulse" />
+              /t/{tournament.slug} &middot; {tournament.location} &middot; Admin dashboard
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-3 text-sm">
           <button onClick={() => setTournament(null)} className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Switch tournament</button>

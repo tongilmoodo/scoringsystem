@@ -5,10 +5,13 @@ import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
 import { useTournamentBySlug } from '@/lib/useTournament';
-import { playBeep, playBuzzer, playChime } from '@/lib/sounds';
+import { useKiosk } from '@/lib/useKiosk';
+import { playBeep, playBuzzer, playChime, playTick, playTimerStart, playBreak, playTakedown, playFanfare } from '@/lib/sounds';
 import PinPad from '@/components/PinPad';
 import VoiceScoring from '@/components/VoiceScoring';
 import Flag from '@/components/Flag';
+import SoundToggle from '@/components/ui/SoundToggle';
+import { ConnectionDot, StatusBadge, type BadgeState } from '@/components/ui/StatusBadge';
 import {
   ACTION_LABELS,
   ATHLETE_SELECT,
@@ -68,6 +71,9 @@ export default function ControllerPage() {
   const takedownHandled = useRef<string | null>(null);
 
   const pushLog = (entry: string) => setLog((l) => [entry, ...l].slice(0, 10));
+
+  // Keep the tablet awake; warn on unload while the match is live.
+  useKiosk(match?.status === 'live');
 
   const loadMatch = useCallback(async () => {
     if (!tournament) return;
@@ -151,11 +157,12 @@ export default function ControllerPage() {
     else if (match.red_fouls >= MAX_FOULS && !dqDismissed.red) setDqSide('red');
   }, [match, dqDismissed]);
 
-  // Round clock countdown; auto-pause + buzzer at zero (controller declares winner).
+  // Round clock countdown; last-10s ticks; auto-pause + buzzer at zero.
   useEffect(() => {
     if (!running) return;
     const timer = setInterval(() => {
       setRemaining((r) => {
+        if (r > 1 && r <= 11) playTick();
         if (r <= 1) {
           setRunning(false);
           playBuzzer();
@@ -195,6 +202,7 @@ export default function ControllerPage() {
     const m = matchRef.current;
     if (!m || remainingRef.current <= 0) return;
     setRunning(true);
+    playTimerStart();
     await supabase
       .from('matches')
       .update({ status: 'live', timer_started_at: new Date().toISOString(), timer_paused_at: null, timer_seconds: remainingRef.current })
@@ -240,6 +248,7 @@ export default function ControllerPage() {
         break_ends_at: new Date(Date.now() + dur * 1000).toISOString(),
       })
       .eq('id', m.id);
+    playBreak();
     pushLog(`Round ${m.current_round} ended \u2014 ${dur}s break`);
   }
 
@@ -284,6 +293,7 @@ export default function ControllerPage() {
       .from('matches')
       .update({ takedown_ends_at: new Date(Date.now() + TAKEDOWN_SECONDS * 1000).toISOString() })
       .eq('id', m.id);
+    playTakedown();
     pushLog('TAKEDOWN window started (30s)');
   }
 
@@ -368,6 +378,7 @@ export default function ControllerPage() {
         takedown_ends_at: null,
       })
       .eq('id', m.id);
+    playFanfare();
     setWinDialog(null);
     setDqSide(null);
     setLog([]);
@@ -399,17 +410,21 @@ export default function ControllerPage() {
     );
   }
 
-  const btn = 'min-h-[80px] rounded-xl text-xl font-bold active:opacity-70 disabled:opacity-40';
-  const smallBtn = 'rounded-lg px-3 py-2 text-sm font-bold active:opacity-70';
+  const btn = 'min-h-[80px] rounded-xl font-headline text-xl font-bold transition active:scale-95 disabled:opacity-30';
+  const smallBtn = 'rounded-lg px-3 py-2 text-sm font-bold active:scale-95';
+  const judgesConnected = new Set(votes.map((v) => v.judge_id)).size;
+  const badgeState: BadgeState = breakActive ? 'break' : takedownActive ? 'takedown' : match.status;
 
   return (
-    <main className="flex min-h-screen flex-col gap-3 p-3">
+    <main className="kiosk flex min-h-screen flex-col gap-3 bg-navy p-3">
       {/* Top bar */}
-      <div className="flex items-center justify-between rounded-lg bg-gray-900 px-4 py-2 text-sm">
-        <span className="font-bold">Court {court === 1 ? 'A' : 'B'} &middot; Controller</span>
-        <span>{ROUND_LABELS[match.round]} &middot; Match {match.match_number} &middot; Round {match.current_round} &middot; {match.status.toUpperCase()}</span>
-        {match.judges_locked && <span className="font-bold text-yellow-400">JUDGES LOCKED</span>}
-        <button onClick={logout} className="text-gray-400 underline">{user.name}</button>
+      <div className="flex items-center justify-between rounded-lg bg-black/30 px-4 py-2 text-sm">
+        <span className="font-headline font-bold uppercase tracking-widest">Court {court === 1 ? 'A' : 'B'} &middot; Controller</span>
+        <span className="text-text-muted">{ROUND_LABELS[match.round]} &middot; Match {match.match_number} &middot; Round {match.current_round}</span>
+        <StatusBadge state={badgeState} />
+        <ConnectionDot connected={judgesConnected} />
+        <SoundToggle />
+        <button onClick={logout} className="text-text-muted underline">{user.name}</button>
       </div>
 
       {/* Break / takedown state banners */}

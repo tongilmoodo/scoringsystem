@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Logo from '@/components/ui/Logo';
+import { requestKioskFullscreen } from '@/lib/useKiosk';
 
 export default function PinPad({
   title,
@@ -17,6 +19,8 @@ export default function PinPad({
     if (pin.length < 4 || busy) return;
     setBusy(true);
     setError('');
+    // First user gesture: enter fullscreen for kiosk tablets.
+    requestKioskFullscreen();
     const err = await onSubmit(pin);
     setBusy(false);
     if (err) {
@@ -26,15 +30,13 @@ export default function PinPad({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-950 text-white">
-      <h1 className="mb-2 text-2xl font-bold">{title}</h1>
-      <p className="mb-4 h-6 text-red-400">{error}</p>
+    <div className={`kiosk fixed inset-0 z-50 flex flex-col items-center justify-center bg-navy text-white ${error ? 'animate-shake' : ''}`}>
+      <Logo size={48} />
+      <h1 className="mb-1 mt-4 font-headline text-2xl font-bold uppercase tracking-widest">{title}</h1>
+      <p className="mb-4 h-6 text-danger">{error}</p>
       <div className="mb-6 flex h-4 gap-3">
         {Array.from({ length: 8 }).map((_, i) => (
-          <span
-            key={i}
-            className={`h-4 w-4 rounded-full ${i < pin.length ? 'bg-white' : 'bg-gray-700'}`}
-          />
+          <span key={i} className={`h-4 w-4 rounded-full transition ${i < pin.length ? 'bg-gold' : 'bg-white/20'}`} />
         ))}
       </div>
       <div className="grid grid-cols-3 gap-3">
@@ -42,11 +44,9 @@ export default function PinPad({
           <button
             key={k}
             disabled={busy}
-            onClick={() =>
-              k === 'C' ? setPin('') : k === 'OK' ? submit() : setPin((p) => (p + k).slice(0, 8))
-            }
-            className={`h-20 w-20 rounded-xl text-2xl font-bold active:opacity-70 ${
-              k === 'OK' ? 'bg-green-600' : k === 'C' ? 'bg-red-700' : 'bg-gray-800'
+            onClick={() => (k === 'C' ? setPin('') : k === 'OK' ? submit() : setPin((p) => (p + k).slice(0, 8)))}
+            className={`h-20 w-20 rounded-xl font-headline text-2xl font-bold transition active:scale-95 ${
+              k === 'OK' ? 'bg-success text-black' : k === 'C' ? 'bg-danger' : 'bg-white/10 hover:bg-white/20'
             }`}
           >
             {k}

@@ -6,9 +6,11 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
 import { useOfflineQueue } from '@/lib/store';
 import { useTournamentBySlug } from '@/lib/useTournament';
+import { useKiosk } from '@/lib/useKiosk';
 import { playChime } from '@/lib/sounds';
 import PinPad from '@/components/PinPad';
 import Flag from '@/components/Flag';
+import { ConnectionDot } from '@/components/ui/StatusBadge';
 import {
   ATHLETE_SELECT,
   formatTime,
@@ -61,6 +63,9 @@ export default function JudgePage() {
   const [remaining, setRemaining] = useState(0);
   const [now, setNow] = useState(Date.now());
   const [online, setOnline] = useState(true);
+
+  // Keep the tablet awake; warn on unload while the match is live.
+  useKiosk(match?.status === 'live');
 
   const loadMatch = useCallback(async () => {
     if (!tournament) return;
@@ -237,17 +242,19 @@ export default function JudgePage() {
     );
   }
 
-  const btn = 'min-h-[80px] rounded-xl text-2xl font-black active:opacity-70 disabled:opacity-40';
+  const btn = 'min-h-[120px] rounded-xl font-headline text-2xl font-bold transition active:scale-95 active:brightness-125 disabled:opacity-30 disabled:pointer-events-none';
+  const judgesConnected = new Set(votes.map((v) => v.judge_id)).size;
 
   return (
-    <main className="flex min-h-screen flex-col gap-3 p-3">
+    <main className="kiosk flex min-h-screen flex-col gap-3 bg-navy p-3">
       {/* Top bar */}
       <div className="flex items-center justify-between rounded-lg bg-gray-900 px-4 py-2 text-sm">
         <span className="font-bold">Court {court === 1 ? 'A' : 'B'} &middot; Judge</span>
         <span>{ROUND_LABELS[match.round]} &middot; Match {match.match_number} &middot; Round {match.current_round}</span>
         <span className="font-mono text-lg font-black tabular-nums">{formatTime(remaining)}</span>
-        {match.judges_locked && <span className="font-bold text-yellow-400">LOCKED</span>}
-        <span className={online ? 'text-green-400' : 'font-bold text-yellow-400'}>
+        {match.judges_locked && <span className="font-bold text-warning">LOCKED</span>}
+        <ConnectionDot connected={judgesConnected} />
+        <span className={online ? 'text-success' : 'font-bold text-warning'}>
           {online ? 'Online' : `Offline \u2014 ${queued.length} queued`}
         </span>
         <button onClick={logout} className="text-gray-400 underline">{user.name}</button>
