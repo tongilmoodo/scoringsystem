@@ -88,12 +88,25 @@ Open http://localhost:3000, generate a bracket at `/admin/draw`, assign matches 
 
 | Route | Purpose | Auth |
 | --- | --- | --- |
-| `/` | Tournament directory with links | none |
-| `/t/[slug]/scoreboard` | All courts, live, auto-translated | none |
-| `/t/[slug]/scoreboard/1`, `.../2` | Single-court TV display | none |
-| `/t/[slug]/bracket` | Live public bracket | none |
+| `/` | Redirects to `/scoreboard` | none |
+| `/scoreboard` | Public live scoreboard, auto-detects the active tournament | none |
+| `/scoreboard/1`, `/scoreboard/2` | Public single-court display (auto-detect) | none |
+| `/bracket` | Public bracket (auto-detect) | none |
+| `/t/[slug]/scoreboard` | Tournament-specific scoreboard | none |
+| `/t/[slug]/scoreboard/1`, `.../2` | Tournament-specific single-court display | none |
+| `/t/[slug]/bracket` | Tournament-specific bracket | none |
 | `/t/[slug]/judge/1`, `.../2` | Corner judge voting tablet (point values only) | judge PIN (tournament + court) |
 | `/t/[slug]/controller/1`, `.../2` | Controller: timer, rounds/breaks, takedown, vote monitor, overrides | controller PIN (tournament + court) |
+| `/setup` | Admin login (the ONLY admin entry point) | admin PIN |
+| `/setup/admin` | Admin dashboard + tournament switcher | admin PIN |
+| `/setup/admin/users` | User management (CRUD, PIN reset, bulk, emergency court reset) | admin PIN |
+| `/setup/admin/system` | Emergency stop, resume, broadcast, lock/clear all | admin PIN |
+| `/setup/admin/matches` | Match management + timer/state override + reset | admin PIN |
+| `/setup/admin/audit` | Audit log with tamper flags, search/filter, CSV/JSON export | admin PIN |
+| `/setup/admin/backup` | JSON backup, snapshot, clone tournament | admin PIN |
+| `/setup/admin/athletes`, `/setup/admin/draw`, `/setup/admin/results` | Athlete CRUD, draw, reports | admin PIN |
+
+The public scoreboard never links to admin. Admin is reachable only by navigating directly to `/setup`.
 | `/admin` | Dashboard, override, assignment | admin PIN |
 | `/admin/draw` | Draw generation and bracket publishing | admin PIN |
 | `/admin/matches` | Match table, filters, reset, print sheets | admin PIN |

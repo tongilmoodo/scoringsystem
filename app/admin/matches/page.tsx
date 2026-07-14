@@ -49,6 +49,22 @@ export default function MatchesPage() {
     await supabase.from('matches').update({ court_number: court, status: 'assigned' }).eq('id', m.id);
   }
 
+  async function adjustTimer(m: Match, delta: number) {
+    const next = Math.max(0, Math.min(m.max_time, m.timer_seconds + delta));
+    await supabase.from('matches').update({ timer_seconds: next }).eq('id', m.id);
+    await supabase.rpc('append_match_audit', {
+      p_match_id: m.id,
+      p_action: 'timer_adjust',
+      p_user: 'admin',
+      p_note: `${delta > 0 ? '+' : ''}${delta}s -> ${next}s`,
+    });
+  }
+
+  async function setStatus(m: Match, status: string) {
+    await supabase.from('matches').update({ status }).eq('id', m.id);
+    await supabase.rpc('append_match_audit', { p_match_id: m.id, p_action: 'status_override', p_user: 'admin', p_note: status });
+  }
+
   async function resetMatch(m: Match) {
     if (!confirm(`Reset match #${m.match_number}? All scores will be cleared.`)) return;
     await supabase.from('score_events').delete().eq('match_id', m.id);
@@ -169,8 +185,19 @@ export default function MatchesPage() {
                       </>
                     )}
                     {['live', 'paused', 'assigned'].includes(m.status) && (
-                      <Link href="/admin" className="mr-2 text-yellow-400 underline">Override</Link>
+                      <>
+                        <button onClick={() => adjustTimer(m, 10)} className="mr-2 text-yellow-400 underline">+10s</button>
+                        <button onClick={() => adjustTimer(m, -10)} className="mr-2 text-yellow-400 underline">-10s</button>
+                      </>
                     )}
+                    <select
+                      onChange={(e) => { if (e.target.value) setStatus(m, e.target.value); e.target.value = ''; }}
+                      className="mr-2 rounded bg-gray-800 px-1 py-0.5 text-xs"
+                      defaultValue=""
+                    >
+                      <option value="">Set state…</option>
+                      {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
                     <button onClick={() => resetMatch(m)} className="text-red-400 underline">Reset</button>
                   </td>
                 </tr>
