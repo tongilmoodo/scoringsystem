@@ -94,7 +94,7 @@ export default function DrawPage() {
 
   async function publish() {
     if (!selected) return;
-    await supabase.from('events').update({ status: 'published' }).eq('id', selected);
+    await supabase.from('events').update({ status: 'live' }).eq('id', selected);
     load();
   }
 
@@ -144,7 +144,7 @@ export default function DrawPage() {
             </button>
             {matches.length > 0 && (
               <button onClick={publish} className="rounded-lg bg-blue-700 px-4 py-2 font-bold">
-                {currentEvent?.status === 'published' ? 'Published ✓' : 'Publish Bracket'}
+                {currentEvent?.status === 'live' ? 'Published ✓' : 'Publish Bracket'}
               </button>
             )}
           </>
