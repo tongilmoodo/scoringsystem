@@ -115,6 +115,21 @@ export const JUDGE_LABELS: Record<ScoreActionType, string> = {
   foul: 'Foul',
 };
 
+export interface BroadcastMessage {
+  id: string;
+  tournament_id: string;
+  message: string;
+  created_at: string;
+  read_by: string[];
+}
+
+export interface AuditEntry {
+  action: string;
+  user: string;
+  timestamp: string;
+  note?: string;
+}
+
 export const ATHLETE_SELECT =
   '*, blue:athletes!matches_blue_athlete_id_fkey(*), red:athletes!matches_red_athlete_id_fkey(*)';
 
