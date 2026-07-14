@@ -3,8 +3,10 @@ import Link from 'next/link';
 const LINKS = [
   { href: '/scoreboard', label: 'Public Scoreboard', desc: 'Live scores for both courts. No login.' },
   { href: '/bracket', label: 'Tournament Bracket', desc: 'Live single-elimination bracket. No login.' },
-  { href: '/court/1', label: 'Court A Scorer', desc: 'Tablet interface. Scorer PIN required.' },
-  { href: '/court/2', label: 'Court B Scorer', desc: 'Tablet interface. Scorer PIN required.' },
+  { href: '/judge/1', label: 'Court A Judge', desc: 'Corner judge voting. Judge PIN required.' },
+  { href: '/judge/2', label: 'Court B Judge', desc: 'Corner judge voting. Judge PIN required.' },
+  { href: '/controller/1', label: 'Court A Controller', desc: 'Timer, vote monitor, overrides. Controller PIN.' },
+  { href: '/controller/2', label: 'Court B Controller', desc: 'Timer, vote monitor, overrides. Controller PIN.' },
   { href: '/admin', label: 'Admin Dashboard', desc: 'Tournament control. Admin PIN required.' },
 ];
 
@@ -12,7 +14,7 @@ export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-4 p-6">
       <h1 className="text-3xl font-black">Mombasa Open</h1>
-      <p className="mb-4 text-gray-400">Tong-Il Moo-Do Scoring System</p>
+      <p className="mb-4 text-gray-400">Tong-Il Moo-Do Scoring System \u00b7 4-Judge Consensus</p>
       {LINKS.map((l) => (
         <Link
           key={l.href}

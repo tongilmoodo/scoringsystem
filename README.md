@@ -7,7 +7,8 @@ Live tournament scoring for 2 concurrent courts with real-time public scoreboard
 ## Features
 
 - **2 independent courts** (A and B) with strict court isolation enforced by Postgres RLS
-- **Touch-optimised scorer tablets** at `/court/1` and `/court/2` (4-digit PIN)
+- **4-judge consensus scoring**: each court has 4 corner judges at `/judge/[court]`; a score only commits when 3+ judges vote for the same action (enforced by the `cast_vote` database function)
+- **Court controllers** at `/controller/[court]`: timer control, live vote monitor, clear votes, manual score override, undo, lock judges, declare winner
 - **Public scoreboard** at `/scoreboard` (split view) and `/scoreboard/[court]` (TV mode), no login
 - **Public bracket** at `/bracket` with live colour-coded status (gray = scheduled, green = live, blue = completed)
 - **Admin dashboard** at `/admin` (6-digit PIN): live status, score override, match assignment
@@ -24,7 +25,7 @@ Live tournament scoring for 2 concurrent courts with real-time public scoreboard
 - **Sound effects**: buzzer at time-up, chime on score, warning beep on foul (Web Audio, no assets)
 - Undo (20 actions), lock screen, disqualification at 3 fouls, win-method dialogs
 
-## Keyboard shortcuts (scorer tablets with keyboards)
+## Keyboard shortcuts (controller tablets with keyboards; 1/2/3/F commit as manual override)
 
 | Key | Action |
 | --- | --- |
@@ -62,8 +63,10 @@ Live tournament scoring for 2 concurrent courts with real-time public scoreboard
 | Role | PIN | Access |
 | --- | --- | --- |
 | Admin (Tournament Director) | `800811` | All `/admin` pages, override on both courts |
-| Court A Scorer | `8118111` | `/court/1` only |
-| Court B Scorer | `822822` | `/court/2` only |
+| Court A Controller | `8118111` | `/controller/1` only |
+| Court A Judges 1-4 | `8118112`, `8118113`, `8118114`, `8118115` | `/judge/1` only |
+| Court B Controller | `822822` | `/controller/2` only |
+| Court B Judges 1-4 | `8228221`, `8228222`, `8228223`, `8228224` | `/judge/2` only |
 
 ### 4. Local development
 
@@ -88,7 +91,8 @@ Open http://localhost:3000, generate a bracket at `/admin/draw`, assign matches 
 | `/scoreboard` | Both courts, live, auto-translated | none |
 | `/scoreboard/1`, `/scoreboard/2` | Single-court TV display | none |
 | `/bracket` | Live public bracket | none |
-| `/court/1`, `/court/2` | Scorer tablet (voice, shortcuts, sounds) | scorer PIN (court-matched) |
+| `/judge/1`, `/judge/2` | Corner judge voting tablet | judge PIN (court-matched) |
+| `/controller/1`, `/controller/2` | Controller: timer, vote monitor, overrides | controller PIN (court-matched) |
 | `/admin` | Dashboard, override, assignment | admin PIN |
 | `/admin/draw` | Draw generation and bracket publishing | admin PIN |
 | `/admin/matches` | Match table, filters, reset, print sheets | admin PIN |
@@ -106,7 +110,8 @@ Open http://localhost:3000, generate a bracket at `/admin/draw`, assign matches 
 
 **The night before**
 - [ ] Charge both scorer tablets + spares; disable OS auto-lock and notifications
-- [ ] Test PIN login on each tablet (`8118111` on the Court A device only, `822822` on Court B only)
+- [ ] Test PIN login on every device: controller + 4 judge tablets per court (see PIN table)
+- [ ] Dry-run consensus: have 3 judges vote the same score and confirm it commits and flashes green
 - [ ] Test voice scoring in the actual hall (microphone permissions, background noise)
 - [ ] Verify TVs load `/scoreboard/1` and `/scoreboard/2` full-screen
 - [ ] Confirm venue Wi-Fi and a mobile hotspot fallback
