@@ -44,8 +44,12 @@ export default function PublicScoreboard() {
       .in('status', ['assigned', 'live', 'paused'])
       .then(({ data }) => {
         const map: Record<number, string> = {};
-        (data ?? []).forEach((m: { court_number: number | null; events: { name: string } | null }) => {
-          if (m.court_number) map[m.court_number] = m.events?.name ?? '';
+        (data ?? []).forEach((m: any) => {
+          if (m.court_number) {
+            // Supabase might return events as an array or single object depending on types
+            const ev = Array.isArray(m.events) ? m.events[0] : m.events;
+            map[m.court_number] = ev?.name ?? '';
+          }
         });
         setEventNames(map);
       });
