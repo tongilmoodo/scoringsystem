@@ -11,6 +11,7 @@ import PinPad from '@/components/PinPad';
 import VoiceScoring from '@/components/VoiceScoring';
 import Flag from '@/components/Flag';
 import SoundToggle from '@/components/ui/SoundToggle';
+import BroadcastBanner from '@/components/BroadcastBanner';
 import { ConnectionDot, StatusBadge, type BadgeState } from '@/components/ui/StatusBadge';
 import {
   ACTION_LABELS,
@@ -426,6 +427,8 @@ export default function ControllerPage() {
         <SoundToggle />
         <button onClick={logout} className="text-text-muted underline">{user.name}</button>
       </div>
+
+      <BroadcastBanner tournamentId={tournament.id} />
 
       {/* Break / takedown state banners */}
       {breakActive && (

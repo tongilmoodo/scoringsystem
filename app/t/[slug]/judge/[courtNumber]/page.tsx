@@ -10,6 +10,7 @@ import { useKiosk } from '@/lib/useKiosk';
 import { playChime } from '@/lib/sounds';
 import PinPad from '@/components/PinPad';
 import Flag from '@/components/Flag';
+import BroadcastBanner from '@/components/BroadcastBanner';
 import { ConnectionDot } from '@/components/ui/StatusBadge';
 import {
   ATHLETE_SELECT,
@@ -259,6 +260,8 @@ export default function JudgePage() {
         </span>
         <button onClick={logout} className="text-gray-400 underline">{user.name}</button>
       </div>
+
+      <BroadcastBanner tournamentId={tournament.id} />
 
       {/* Break / takedown banners */}
       {breakActive && (

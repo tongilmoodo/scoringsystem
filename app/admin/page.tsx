@@ -186,10 +186,12 @@ export default function AdminPage() {
         </div>
         <div className="flex flex-wrap gap-3 text-sm">
           <button onClick={() => setTournament(null)} className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Switch tournament</button>
-          <Link href="/admin/draw" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Draw &amp; Bracket</Link>
-          <Link href="/admin/matches" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Manage Matches</Link>
-          <Link href="/admin/results" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Results</Link>
-          <Link href="/admin/athletes" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Manage Athletes</Link>
+          <Link href="/setup/admin/draw" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Draw &amp; Bracket</Link>
+          <Link href="/setup/admin/matches" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Manage Matches</Link>
+          <Link href="/setup/admin/results" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Results</Link>
+          <Link href="/setup/admin/athletes" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Manage Athletes</Link>
+          <Link href="/setup/admin/users" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Users</Link>
+          <Link href="/setup/admin/system" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">System</Link>
           <Link href={`/t/${tournament.slug}/scoreboard`} className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Scoreboard</Link>
           <button onClick={logout} className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Logout ({user.name})</button>
         </div>
