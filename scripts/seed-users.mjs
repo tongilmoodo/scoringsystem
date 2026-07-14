@@ -13,13 +13,21 @@ const admin = createClient(url, key);
 
 const USERS = [
   { name: 'Tournament Director', pin: '800811', role: 'admin', court_access: null },
-  { name: 'Scorer Court A', pin: '8118111', role: 'scorer', court_access: 1 },
-  { name: 'Scorer Court B', pin: '822822', role: 'scorer', court_access: 2 },
+  { name: 'Controller Court A', pin: '8118111', role: 'controller', court_access: 1 },
+  { name: 'Judge A1', pin: '8118112', role: 'judge', court_access: 1 },
+  { name: 'Judge A2', pin: '8118113', role: 'judge', court_access: 1 },
+  { name: 'Judge A3', pin: '8118114', role: 'judge', court_access: 1 },
+  { name: 'Judge A4', pin: '8118115', role: 'judge', court_access: 1 },
+  { name: 'Controller Court B', pin: '822822', role: 'controller', court_access: 2 },
+  { name: 'Judge B1', pin: '8228221', role: 'judge', court_access: 2 },
+  { name: 'Judge B2', pin: '8228222', role: 'judge', court_access: 2 },
+  { name: 'Judge B3', pin: '8228223', role: 'judge', court_access: 2 },
+  { name: 'Judge B4', pin: '8228224', role: 'judge', court_access: 2 },
 ];
 
 for (const u of USERS) {
   const email = `pin_${u.pin}@system.local`;
-  // Supabase requires passwords >= 6 chars; 4-digit PINs are padded with zeros.
+  // Supabase requires passwords >= 6 chars; short PINs are padded with zeros.
   const password = u.pin.padEnd(6, '0');
   const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) {

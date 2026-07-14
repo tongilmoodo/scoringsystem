@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase/client';
 export interface AppUser {
   id: string;
   name: string;
-  role: 'admin' | 'scorer';
+  role: 'admin' | 'controller' | 'judge';
   court_access: number | null;
 }
 

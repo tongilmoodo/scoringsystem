@@ -1,4 +1,6 @@
 export type Side = 'blue' | 'red';
+export type Role = 'admin' | 'controller' | 'judge';
+export type ScoreActionType = 'point_1' | 'point_2' | 'point_3' | 'foul';
 
 export interface Athlete {
   id: string;
@@ -30,10 +32,22 @@ export interface Match {
   max_time: number;
   timer_started_at: string | null;
   timer_paused_at?: string | null;
+  judges_locked: boolean;
   next_match_id: string | null;
   next_match_position: Side | null;
   blue?: Athlete | null;
   red?: Athlete | null;
+}
+
+export interface JudgeVote {
+  id: string;
+  match_id: string;
+  judge_id: string;
+  player_side: Side;
+  action_type: ScoreActionType | 'win_blue' | 'win_red';
+  points: number;
+  status: 'pending' | 'committed' | 'cleared';
+  created_at: string;
 }
 
 export interface ScoreEvent {
@@ -41,11 +55,21 @@ export interface ScoreEvent {
   match_id: string;
   athlete_id?: string | null;
   player_side: Side;
-  action_type: 'point_1' | 'point_2' | 'point_3' | 'foul' | 'win_blue' | 'win_red';
+  action_type: ScoreActionType | 'win_blue' | 'win_red';
   points: number;
   match_time_seconds: number | null;
   scored_by: string | null;
   created_at: string;
+}
+
+export interface CastVoteResult {
+  committed: boolean;
+  error?: 'already_voted' | 'locked' | 'match_completed';
+  action?: string;
+  votes?: number;
+  top_action?: string;
+  top_votes?: number;
+  side?: Side;
 }
 
 export const ROUND_LABELS: Record<Match['round'], string> = {
@@ -55,6 +79,13 @@ export const ROUND_LABELS: Record<Match['round'], string> = {
   semi_final: 'Semi Final',
   third_place: 'Third Place',
   final: 'Final',
+};
+
+export const ACTION_LABELS: Record<ScoreActionType, string> = {
+  point_1: '+1 Punch',
+  point_2: '+2 Kick',
+  point_3: '+3 Spin',
+  foul: 'Foul',
 };
 
 export const ATHLETE_SELECT =

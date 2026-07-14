@@ -2,29 +2,30 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { Side, ScoreActionType } from '@/lib/types';
 
-export interface QueuedAction {
-  table: 'score_events' | 'matches';
-  op: 'insert' | 'update';
-  payload: Record<string, unknown>;
-  matchId?: string;
+export interface QueuedVote {
+  match_id: string;
+  judge_id: string;
+  player_side: Side;
+  action_type: ScoreActionType;
 }
 
 interface OfflineQueueState {
-  queue: QueuedAction[];
-  enqueue: (action: QueuedAction) => void;
+  votes: QueuedVote[];
+  enqueue: (vote: QueuedVote) => void;
   clear: () => void;
 }
 
-// Actions taken while the tablet is offline are queued here (persisted to
-// localStorage) and replayed once the connection is restored.
+// Votes cast while a judge tablet is offline are queued here (persisted to
+// localStorage) and replayed through cast_vote() once reconnected.
 export const useOfflineQueue = create<OfflineQueueState>()(
   persist(
     (set) => ({
-      queue: [],
-      enqueue: (action) => set((s) => ({ queue: [...s.queue, action] })),
-      clear: () => set({ queue: [] }),
+      votes: [],
+      enqueue: (vote) => set((s) => ({ votes: [...s.votes, vote] })),
+      clear: () => set({ votes: [] }),
     }),
-    { name: 'offline-queue' }
+    { name: 'offline-vote-queue' }
   )
 );
