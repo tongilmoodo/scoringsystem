@@ -313,7 +313,7 @@ export default function ControllerPage() {
   if (!match) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-2">
-        <h1 className="text-2xl font-bold">Court {court === 1 ? 'A' : 'B'} \u2014 Controller</h1>
+        <h1 className="text-2xl font-bold">Court {court === 1 ? 'A' : 'B'} &mdash; Controller</h1>
         <p className="text-gray-400">Waiting for the admin to assign a match&hellip;</p>
       </main>
     );
@@ -326,8 +326,8 @@ export default function ControllerPage() {
     <main className="flex min-h-screen flex-col gap-3 p-3">
       {/* Top bar */}
       <div className="flex items-center justify-between rounded-lg bg-gray-900 px-4 py-2 text-sm">
-        <span className="font-bold">Court {court === 1 ? 'A' : 'B'} \u00b7 Controller</span>
-        <span>{ROUND_LABELS[match.round]} \u00b7 Match {match.match_number} \u00b7 {match.status.toUpperCase()}</span>
+        <span className="font-bold">Court {court === 1 ? 'A' : 'B'} &middot; Controller</span>
+        <span>{ROUND_LABELS[match.round]} &middot; Match {match.match_number} &middot; {match.status.toUpperCase()}</span>
         {match.judges_locked && <span className="font-bold text-yellow-400">JUDGES LOCKED</span>}
         <button onClick={logout} className="text-gray-400 underline">{user.name}</button>
       </div>

@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-4 p-6">
       <h1 className="text-3xl font-black">Mombasa Open</h1>
-      <p className="mb-4 text-gray-400">Tong-Il Moo-Do Scoring System \u00b7 4-Judge Consensus</p>
+      <p className="mb-4 text-gray-400">Tong-Il Moo-Do Scoring System &middot; 4-Judge Consensus</p>
       {LINKS.map((l) => (
         <Link
           key={l.href}
