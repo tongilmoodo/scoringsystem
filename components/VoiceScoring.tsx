@@ -24,7 +24,7 @@ function toBase64(buf: ArrayBuffer): string {
   let binary = '';
   const CHUNK = 0x8000;
   for (let i = 0; i < bytes.length; i += CHUNK) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    binary += String.fromCharCode(...Array.from(bytes.subarray(i, i + CHUNK)));
   }
   return btoa(binary);
 }
