@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
+import { useTournamentBySlug } from '@/lib/useTournament';
 import { playBeep, playBuzzer, playChime } from '@/lib/sounds';
 import PinPad from '@/components/PinPad';
 import VoiceScoring from '@/components/VoiceScoring';
@@ -22,6 +23,7 @@ import {
 const ACTIONS: ScoreActionType[] = ['point_1', 'point_2', 'point_3', 'foul'];
 const WIN_METHODS = ['points', 'ko', 'disqualification', 'withdrawal', 'forfeit'] as const;
 const MAX_FOULS = 3;
+const TAKEDOWN_SECONDS = 30;
 
 function label(a: string) {
   return ACTION_LABELS[a as ScoreActionType] ?? a;
@@ -37,13 +39,17 @@ function tallyLine(votes: JudgeVote[], side: Side) {
 }
 
 export default function ControllerPage() {
-  const court = Number(useParams().courtNumber);
+  const params = useParams();
+  const slug = String(params.slug);
+  const court = Number(params.courtNumber);
+  const { tournament, loading } = useTournamentBySlug(slug);
   const { user, ready, login, logout } = useAuth();
 
   const [match, setMatch] = useState<Match | null>(null);
   const [votes, setVotes] = useState<JudgeVote[]>([]);
   const [remaining, setRemaining] = useState(180);
   const [running, setRunning] = useState(false);
+  const [now, setNow] = useState(Date.now());
   const [winDialog, setWinDialog] = useState<Side | null>(null);
   const [manualSide, setManualSide] = useState<Side | null>(null);
   const [dqSide, setDqSide] = useState<Side | null>(null);
@@ -56,13 +62,19 @@ export default function ControllerPage() {
   runningRef.current = running;
   const remainingRef = useRef(180);
   remainingRef.current = remaining;
+  // Default behaviour: match clock auto-pauses during a takedown window and
+  // resumes automatically when the window ends.
+  const takedownAutoPaused = useRef(false);
+  const takedownHandled = useRef<string | null>(null);
 
   const pushLog = (entry: string) => setLog((l) => [entry, ...l].slice(0, 10));
 
   const loadMatch = useCallback(async () => {
+    if (!tournament) return;
     const { data } = await supabase
       .from('matches')
       .select(ATHLETE_SELECT)
+      .eq('tournament_id', tournament.id)
       .eq('court_number', court)
       .in('status', ['assigned', 'live', 'paused'])
       .order('match_number')
@@ -71,7 +83,7 @@ export default function ControllerPage() {
     const m = (data as Match | null) ?? null;
     setMatch(m);
     if (m && !runningRef.current) setRemaining(m.timer_seconds);
-  }, [court]);
+  }, [court, tournament?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadVotes = useCallback(async () => {
     const m = matchRef.current;
@@ -85,29 +97,29 @@ export default function ControllerPage() {
   }, []);
 
   useEffect(() => {
-    if (user) loadMatch();
-  }, [user, loadMatch]);
+    if (user && tournament) loadMatch();
+  }, [user, tournament, loadMatch]);
 
   useEffect(() => {
+    if (!tournament) return;
     const ch = supabase
-      .channel(`matches:court:${court}:controller`)
+      .channel(`matches:t:${slug}:court:${court}:controller`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'matches', filter: `court_number=eq.${court}` },
+        { event: '*', schema: 'public', table: 'matches', filter: `tournament_id=eq.${tournament.id}` },
         () => loadMatch()
       )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [court, loadMatch]);
+  }, [slug, court, tournament?.id, loadMatch]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Live vote monitor + committed-score sounds for the current match.
   useEffect(() => {
     loadVotes();
     if (!match) return;
     const ch = supabase
-      .channel(`score:court:${court}:${match.id}`)
+      .channel(`score:${match.id}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'judge_votes', filter: `match_id=eq.${match.id}` },
@@ -117,31 +129,29 @@ export default function ControllerPage() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'score_events', filter: `match_id=eq.${match.id}` },
         (payload) => {
-          const ev = payload.new as { action_type: string; player_side: string; scored_by: string };
+          const ev = payload.new as { action_type: string; player_side: string; scored_by: string; takedown: boolean };
           if (ev.action_type === 'foul') playBeep();
           else playChime();
-          pushLog(`${ev.player_side.toUpperCase()} ${label(ev.action_type)} (${ev.scored_by})`);
+          pushLog(`${ev.player_side.toUpperCase()} ${label(ev.action_type)}${ev.takedown ? ' [TAKEDOWN]' : ''} (${ev.scored_by})`);
         }
       )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [match?.id, court, loadVotes]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [match?.id, loadVotes]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reset DQ dismissals per match.
   useEffect(() => {
     setDqDismissed({ blue: false, red: false });
   }, [match?.id]);
 
-  // DQ prompt: controller decides.
   useEffect(() => {
     if (!match || match.status === 'completed') return;
     if (match.blue_fouls >= MAX_FOULS && !dqDismissed.blue) setDqSide('blue');
     else if (match.red_fouls >= MAX_FOULS && !dqDismissed.red) setDqSide('red');
   }, [match, dqDismissed]);
 
-  // Local countdown; auto-pause + buzzer at zero.
+  // Round clock countdown; auto-pause + buzzer at zero (controller declares winner).
   useEffect(() => {
     if (!running) return;
     const timer = setInterval(() => {
@@ -156,7 +166,7 @@ export default function ControllerPage() {
               .update({ status: 'paused', timer_started_at: null, timer_seconds: 0 })
               .eq('id', m.id);
           }
-          pushLog('TIME UP \u2014 declare winner');
+          pushLog('TIME UP');
           return 0;
         }
         return r - 1;
@@ -164,6 +174,22 @@ export default function ControllerPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [running]);
+
+  // Shared wall-clock tick for break/takedown countdowns.
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(t);
+  }, []);
+
+  const breakActive = !!match?.break_ends_at && new Date(match.break_ends_at).getTime() > now;
+  const breakRemaining = breakActive
+    ? Math.max(0, Math.ceil((new Date(match!.break_ends_at!).getTime() - now) / 1000))
+    : 0;
+  const breakOver = !!match?.break_ends_at && !breakActive; // expired, awaiting Start Round
+  const takedownActive = !!match?.takedown_ends_at && new Date(match.takedown_ends_at).getTime() > now;
+  const takedownRemaining = takedownActive
+    ? Math.max(0, Math.ceil((new Date(match!.takedown_ends_at!).getTime() - now) / 1000))
+    : 0;
 
   async function startTimer() {
     const m = matchRef.current;
@@ -198,6 +224,89 @@ export default function ControllerPage() {
       .eq('id', m.id);
     pushLog('Timer reset');
   }
+
+  // ---- Round breaks --------------------------------------------------------
+  async function endRound() {
+    const m = matchRef.current;
+    if (!m) return;
+    setRunning(false);
+    const dur = m.break_duration_seconds ?? 30;
+    await supabase
+      .from('matches')
+      .update({
+        status: 'paused',
+        timer_started_at: null,
+        timer_seconds: remainingRef.current,
+        break_ends_at: new Date(Date.now() + dur * 1000).toISOString(),
+      })
+      .eq('id', m.id);
+    pushLog(`Round ${m.current_round} ended \u2014 ${dur}s break`);
+  }
+
+  async function skipBreak() {
+    const m = matchRef.current;
+    if (!m) return;
+    await supabase.from('matches').update({ break_ends_at: null }).eq('id', m.id);
+    pushLog('Break skipped');
+  }
+
+  // After the break expires the controller must tap Start Round (no auto-start).
+  async function startNextRound() {
+    const m = matchRef.current;
+    if (!m) return;
+    setRemaining(m.max_time);
+    setRunning(true);
+    await supabase
+      .from('matches')
+      .update({
+        break_ends_at: null,
+        current_round: m.current_round + 1,
+        timer_seconds: m.max_time,
+        timer_started_at: new Date().toISOString(),
+        status: 'live',
+      })
+      .eq('id', m.id);
+    pushLog(`Round ${m.current_round + 1} started`);
+  }
+
+  // ---- Takedown window -----------------------------------------------------
+  async function startTakedown() {
+    const m = matchRef.current;
+    if (!m) return;
+    if (runningRef.current) {
+      takedownAutoPaused.current = true;
+      await pauseTimer();
+    } else {
+      takedownAutoPaused.current = false;
+    }
+    takedownHandled.current = null;
+    await supabase
+      .from('matches')
+      .update({ takedown_ends_at: new Date(Date.now() + TAKEDOWN_SECONDS * 1000).toISOString() })
+      .eq('id', m.id);
+    pushLog('TAKEDOWN window started (30s)');
+  }
+
+  async function endTakedown() {
+    const m = matchRef.current;
+    if (!m) return;
+    await supabase.from('matches').update({ takedown_ends_at: null }).eq('id', m.id);
+    pushLog('Takedown window ended');
+    if (takedownAutoPaused.current) {
+      takedownAutoPaused.current = false;
+      await startTimer(); // resume the match clock
+    }
+  }
+
+  // Auto-revert when the takedown timer expires.
+  useEffect(() => {
+    if (!match?.takedown_ends_at) return;
+    if (takedownActive) return;
+    if (takedownHandled.current === match.takedown_ends_at) return;
+    takedownHandled.current = match.takedown_ends_at;
+    endTakedown();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [takedownActive, match?.takedown_ends_at]);
 
   async function clearVotes(side: Side) {
     const m = matchRef.current;
@@ -255,6 +364,8 @@ export default function ControllerPage() {
         timer_started_at: null,
         timer_seconds: remainingRef.current,
         judges_locked: false,
+        break_ends_at: null,
+        takedown_ends_at: null,
       })
       .eq('id', m.id);
     setWinDialog(null);
@@ -263,50 +374,18 @@ export default function ControllerPage() {
     loadMatch();
   }
 
-  // Keyboard shortcuts: Space start/pause, 1/2/3/F manual commit (Shift = red),
-  // U undo, L lock judges.
-  const manualRef = useRef(manualCommit);
-  manualRef.current = manualCommit;
-  const undoRef = useRef(undoLast);
-  undoRef.current = undoLast;
-  const startRef = useRef(startTimer);
-  startRef.current = startTimer;
-  const pauseRef = useRef(pauseTimer);
-  pauseRef.current = pauseTimer;
-  const lockRef = useRef(toggleLock);
-  lockRef.current = toggleLock;
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      const target = e.target as HTMLElement;
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
-      if (e.code === 'Space') {
-        e.preventDefault();
-        if (runningRef.current) pauseRef.current();
-        else startRef.current();
-        return;
-      }
-      const side: Side = e.shiftKey ? 'red' : 'blue';
-      switch (e.key) {
-        case '1': case '!': manualRef.current(side, 'point_1'); break;
-        case '2': case '@': manualRef.current(side, 'point_2'); break;
-        case '3': case '#': manualRef.current(side, 'point_3'); break;
-        case 'f': case 'F': manualRef.current(side, 'foul'); break;
-        case 'u': case 'U': undoRef.current(); break;
-        case 'l': case 'L': lockRef.current(); break;
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
   // ---- Render guards -----------------------------------------------------
-  if (!ready || Number.isNaN(court) || (court !== 1 && court !== 2)) return null;
-  if (!user) return <PinPad title={`Court ${court === 1 ? 'A' : 'B'} Controller Login`} onSubmit={login} />;
-  if (user.role !== 'controller' || user.court_access !== court) {
+  if (loading || !ready || Number.isNaN(court) || (court !== 1 && court !== 2)) return null;
+  if (!tournament) {
+    return <main className="flex min-h-screen items-center justify-center text-gray-400">Tournament not found.</main>;
+  }
+  if (!user) {
+    return <PinPad title={`${tournament.name} \u2014 Court ${court === 1 ? 'A' : 'B'} Controller`} onSubmit={(pin) => login(pin, slug)} />;
+  }
+  if (user.role !== 'controller' || user.court_access !== court || (user.tournament_id && user.tournament_id !== tournament.id)) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <p className="text-xl">Access denied: this device is not the Court {court === 1 ? 'A' : 'B'} controller.</p>
+        <p className="text-xl">Access denied: this device is not the Court {court === 1 ? 'A' : 'B'} controller for this tournament.</p>
         <button onClick={logout} className="rounded-lg bg-gray-700 px-6 py-3 font-bold">Switch user</button>
       </main>
     );
@@ -328,10 +407,30 @@ export default function ControllerPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between rounded-lg bg-gray-900 px-4 py-2 text-sm">
         <span className="font-bold">Court {court === 1 ? 'A' : 'B'} &middot; Controller</span>
-        <span>{ROUND_LABELS[match.round]} &middot; Match {match.match_number} &middot; {match.status.toUpperCase()}</span>
+        <span>{ROUND_LABELS[match.round]} &middot; Match {match.match_number} &middot; Round {match.current_round} &middot; {match.status.toUpperCase()}</span>
         {match.judges_locked && <span className="font-bold text-yellow-400">JUDGES LOCKED</span>}
         <button onClick={logout} className="text-gray-400 underline">{user.name}</button>
       </div>
+
+      {/* Break / takedown state banners */}
+      {breakActive && (
+        <div className="flex items-center justify-center gap-4 rounded-xl bg-yellow-500 p-3 text-black">
+          <span className="text-3xl font-black">BREAK &mdash; {formatTime(breakRemaining)}</span>
+          <button onClick={skipBreak} className="rounded-lg bg-black px-4 py-2 font-bold text-white">Skip Break</button>
+        </div>
+      )}
+      {breakOver && (
+        <div className="flex items-center justify-center gap-4 rounded-xl bg-green-800 p-3">
+          <span className="text-2xl font-black">Break over &mdash; ready for Round {match.current_round + 1}</span>
+          <button onClick={startNextRound} className="rounded-lg bg-green-500 px-6 py-2 text-xl font-black text-black">Start Round {match.current_round + 1}</button>
+        </div>
+      )}
+      {takedownActive && (
+        <div className="flex animate-pulse items-center justify-center gap-4 rounded-xl bg-purple-600 p-3">
+          <span className="text-3xl font-black">TAKEDOWN &mdash; {formatTime(takedownRemaining)}</span>
+          <button onClick={endTakedown} className="rounded-lg bg-black px-4 py-2 font-bold">End Takedown</button>
+        </div>
+      )}
 
       {/* Athlete panels with vote monitor */}
       <div className="grid flex-1 grid-cols-2 gap-3">
@@ -348,7 +447,6 @@ export default function ControllerPage() {
                 <p className="text-8xl font-black tabular-nums">{score}</p>
                 <p className="text-white/80">Fouls: {fouls} / {MAX_FOULS}</p>
               </div>
-              {/* Vote monitor */}
               <div className="rounded bg-black/30 p-2 text-center text-sm">
                 <p className="font-bold">{side.toUpperCase()} votes</p>
                 <p>{tallyLine(votes, side)}</p>
@@ -362,12 +460,14 @@ export default function ControllerPage() {
         })}
       </div>
 
-      {/* Timer controls + voice override */}
+      {/* Timer + special-state controls */}
       <div className="flex flex-wrap items-center justify-center gap-3 rounded-xl bg-gray-900 p-3">
         <span className="font-mono text-6xl font-black tabular-nums">{formatTime(remaining)}</span>
-        <button disabled={running} onClick={startTimer} className={`${btn} bg-green-700 px-6`}>Start</button>
+        <button disabled={running || breakActive} onClick={startTimer} className={`${btn} bg-green-700 px-6`}>Start</button>
         <button disabled={!running} onClick={pauseTimer} className={`${btn} bg-gray-700 px-6`}>Pause</button>
-        <button onClick={resetTimer} className={`${btn} bg-gray-700 px-6`}>Reset</button>
+        <button disabled={breakActive} onClick={resetTimer} className={`${btn} bg-gray-700 px-6`}>Reset</button>
+        <button disabled={breakActive} onClick={endRound} className={`${btn} bg-yellow-600 px-6 text-black`}>End Round</button>
+        <button disabled={takedownActive || breakActive} onClick={startTakedown} className={`${btn} bg-purple-700 px-6`}>Takedown</button>
         <button onClick={() => setWinDialog(match.blue_score >= match.red_score ? 'blue' : 'red')} className={`${btn} bg-orange-700 px-6`}>End Match</button>
         <VoiceScoring onScore={(side, action) => manualCommit(side, action as ScoreActionType)} />
       </div>

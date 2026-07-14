@@ -1,8 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import BracketView from '@/components/BracketView';
+import { useTournamentBySlug } from '@/lib/useTournament';
 import { ATHLETE_SELECT, type Match } from '@/lib/types';
 
 interface EventRow {
@@ -11,21 +13,25 @@ interface EventRow {
 }
 
 export default function PublicBracketPage() {
+  const slug = String(useParams().slug);
+  const { tournament, loading } = useTournamentBySlug(slug);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [selected, setSelected] = useState('');
   const [matches, setMatches] = useState<Match[]>([]);
 
   useEffect(() => {
+    if (!tournament) return;
     supabase
       .from('events')
       .select('id, name')
+      .eq('tournament_id', tournament.id)
       .order('created_at')
       .then(({ data }) => {
         const evs = (data ?? []) as EventRow[];
         setEvents(evs);
         if (evs[0]) setSelected(evs[0].id);
       });
-  }, []);
+  }, [tournament?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = useCallback(async () => {
     if (!selected) return;
@@ -40,18 +46,23 @@ export default function PublicBracketPage() {
   useEffect(() => {
     load();
     const ch = supabase
-      .channel('public-bracket')
+      .channel(`public-bracket-${slug}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, load)
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [load]);
+  }, [load, slug]);
+
+  if (loading) return null;
+  if (!tournament) {
+    return <main className="flex min-h-screen items-center justify-center text-gray-400">Tournament not found.</main>;
+  }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-4 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-black">Tournament Bracket</h1>
+        <h1 className="text-2xl font-black">{tournament.name} &middot; Bracket</h1>
         <select
           className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2"
           value={selected}

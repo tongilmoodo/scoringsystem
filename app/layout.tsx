@@ -1,25 +1,9 @@
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Mombasa Open Tong-Il Moo-Do Scoring System',
-  description: 'Live tournament scoring for the Mombasa Open',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'MO Scoring',
-  },
-  formatDetection: {
-    telephone: false,
-  },
-};
-
-export const viewport: Viewport = {
-  themeColor: '#030712',
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  title: 'Tong-Il Moo-Do Scoring System',
+  description: 'Multi-tournament live scoring platform for Tong-Il Moo-Do events',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

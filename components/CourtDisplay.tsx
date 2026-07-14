@@ -6,62 +6,70 @@ import { useTranslation } from '@/lib/i18n';
 import Flag from '@/components/Flag';
 import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match } from '@/lib/types';
 
-const LABELS = ['Court', 'Match', 'No active match', 'Fouls'];
+const LABELS = ['Court', 'Match', 'No active match', 'Fouls', 'Round Break', 'Round'];
 
 function initials(name: string) {
-  return name
-    .split(' ')
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  return name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 }
 
-export default function CourtDisplay({ court, big = false }: { court: number; big?: boolean }) {
+export default function CourtDisplay({
+  court,
+  tournamentId,
+  big = false,
+}: {
+  court: number;
+  tournamentId: string;
+  big?: boolean;
+}) {
   const { t } = useTranslation(LABELS);
   const [match, setMatch] = useState<Match | null>(null);
   const [remaining, setRemaining] = useState(0);
+  const [now, setNow] = useState(Date.now());
 
   const load = useCallback(async () => {
     const { data } = await supabase
       .from('matches')
       .select(ATHLETE_SELECT)
+      .eq('tournament_id', tournamentId)
       .eq('court_number', court)
       .in('status', ['assigned', 'live', 'paused'])
       .order('match_number')
       .limit(1)
       .maybeSingle();
     setMatch((data as Match | null) ?? null);
-  }, [court]);
+  }, [court, tournamentId]);
 
   useEffect(() => {
     load();
     const ch = supabase
-      .channel(`matches:court:${court}:display`)
+      .channel(`matches:t:${tournamentId}:court:${court}:display`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'matches', filter: `court_number=eq.${court}` },
+        { event: '*', schema: 'public', table: 'matches', filter: `tournament_id=eq.${tournamentId}` },
         () => load()
       )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [court, load]);
+  }, [court, tournamentId, load]);
 
-  // Derive the countdown from timer_started_at so every viewer stays in sync.
   useEffect(() => {
     const timer = setInterval(() => {
+      setNow(Date.now());
       if (!match) return;
       if (match.status === 'live' && match.timer_started_at) {
         const elapsed = Math.floor((Date.now() - new Date(match.timer_started_at).getTime()) / 1000);
         setRemaining(Math.max(0, match.timer_seconds - elapsed));
-      } else {
-        setRemaining(match.timer_seconds);
-      }
+      } else setRemaining(match.timer_seconds);
     }, 500);
     return () => clearInterval(timer);
   }, [match]);
+
+  const breakActive = !!match?.break_ends_at && new Date(match.break_ends_at).getTime() > now;
+  const breakRemaining = breakActive
+    ? Math.max(0, Math.ceil((new Date(match!.break_ends_at!).getTime() - now) / 1000))
+    : 0;
 
   const scoreSize = big ? 'text-[150px] leading-none md:text-[220px]' : 'text-7xl';
   const nameSize = big ? 'text-4xl md:text-5xl' : 'text-2xl';
@@ -80,14 +88,10 @@ export default function CourtDisplay({ court, big = false }: { court: number; bi
       <div className="mb-4 flex items-center justify-between text-gray-300">
         <span className="font-bold">{t('Court')} {court === 1 ? 'A' : 'B'}</span>
         <span>
-          {ROUND_LABELS[match.round]} &middot; {t('Match')} {match.match_number}
+          {ROUND_LABELS[match.round]} &middot; {t('Match')} {match.match_number} &middot; {t('Round')} {match.current_round}
         </span>
-        <span
-          className={`rounded px-2 py-0.5 text-sm font-bold ${
-            match.status === 'live' ? 'bg-green-700' : 'bg-gray-700'
-          }`}
-        >
-          {match.status.toUpperCase()}
+        <span className={`rounded px-2 py-0.5 text-sm font-bold ${match.status === 'live' ? 'bg-green-700' : 'bg-gray-700'}`}>
+          {breakActive ? t('Round Break').toUpperCase() : match.status.toUpperCase()}
         </span>
       </div>
       <div className="grid flex-1 grid-cols-2 gap-4">
@@ -96,20 +100,13 @@ export default function CourtDisplay({ court, big = false }: { court: number; bi
           const score = side === 'blue' ? match.blue_score : match.red_score;
           const fouls = side === 'blue' ? match.blue_fouls : match.red_fouls;
           return (
-            <div
-              key={side}
-              className={`flex flex-col items-center justify-center rounded-lg p-4 ${
-                side === 'blue' ? 'bg-blue-600' : 'bg-red-600'
-              }`}
-            >
+            <div key={side} className={`flex flex-col items-center justify-center rounded-lg p-4 ${side === 'blue' ? 'bg-blue-600' : 'bg-red-600'}`}>
               {big && (
                 <div className="mb-3 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-white/20 text-4xl font-bold">
                   {athlete?.photo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={athlete.photo_url} alt={athlete.name} className="h-full w-full object-cover" />
-                  ) : (
-                    athlete ? initials(athlete.name) : '?'
-                  )}
+                  ) : athlete ? initials(athlete.name) : '?'}
                 </div>
               )}
               <p className={`${nameSize} text-center font-bold`}>{athlete?.name ?? 'TBD'}</p>
@@ -124,9 +121,15 @@ export default function CourtDisplay({ court, big = false }: { court: number; bi
         })}
       </div>
       <div className="mt-4 text-center">
-        <span className={`font-mono font-black tabular-nums ${big ? 'text-8xl' : 'text-5xl'}`}>
-          {formatTime(remaining)}
-        </span>
+        {breakActive ? (
+          <span className={`font-black tabular-nums text-yellow-400 ${big ? 'text-7xl' : 'text-4xl'}`}>
+            {t('Round Break').toUpperCase()} &middot; {formatTime(breakRemaining)}
+          </span>
+        ) : (
+          <span className={`font-mono font-black tabular-nums ${big ? 'text-8xl' : 'text-5xl'}`}>
+            {formatTime(remaining)}
+          </span>
+        )}
       </div>
     </div>
   );
