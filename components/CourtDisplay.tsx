@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
+import { useTranslation } from '@/lib/i18n';
 import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match } from '@/lib/types';
+
+const LABELS = ['Court', 'Match', 'No active match', 'Fouls'];
 
 function initials(name: string) {
   return name
@@ -14,6 +17,7 @@ function initials(name: string) {
 }
 
 export default function CourtDisplay({ court, big = false }: { court: number; big?: boolean }) {
+  const { t } = useTranslation(LABELS);
   const [match, setMatch] = useState<Match | null>(null);
   const [remaining, setRemaining] = useState(0);
 
@@ -46,7 +50,7 @@ export default function CourtDisplay({ court, big = false }: { court: number; bi
 
   // Derive the countdown from timer_started_at so every viewer stays in sync.
   useEffect(() => {
-    const t = setInterval(() => {
+    const timer = setInterval(() => {
       if (!match) return;
       if (match.status === 'live' && match.timer_started_at) {
         const elapsed = Math.floor((Date.now() - new Date(match.timer_started_at).getTime()) / 1000);
@@ -55,7 +59,7 @@ export default function CourtDisplay({ court, big = false }: { court: number; bi
         setRemaining(match.timer_seconds);
       }
     }, 500);
-    return () => clearInterval(t);
+    return () => clearInterval(timer);
   }, [match]);
 
   const scoreSize = big ? 'text-[150px] leading-none md:text-[220px]' : 'text-7xl';
@@ -64,8 +68,8 @@ export default function CourtDisplay({ court, big = false }: { court: number; bi
   if (!match) {
     return (
       <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-gray-800 bg-gray-900 p-6">
-        <h2 className="text-xl font-bold text-gray-400">Court {court === 1 ? 'A' : 'B'}</h2>
-        <p className="mt-4 text-gray-500">No active match</p>
+        <h2 className="text-xl font-bold text-gray-400">{t('Court')} {court === 1 ? 'A' : 'B'}</h2>
+        <p className="mt-4 text-gray-500">{t('No active match')}</p>
       </div>
     );
   }
@@ -73,9 +77,9 @@ export default function CourtDisplay({ court, big = false }: { court: number; bi
   return (
     <div className="flex h-full flex-col rounded-xl border border-gray-800 bg-gray-900 p-4">
       <div className="mb-4 flex items-center justify-between text-gray-300">
-        <span className="font-bold">Court {court === 1 ? 'A' : 'B'}</span>
+        <span className="font-bold">{t('Court')} {court === 1 ? 'A' : 'B'}</span>
         <span>
-          {ROUND_LABELS[match.round]} · Match {match.match_number}
+          {ROUND_LABELS[match.round]} &middot; {t('Match')} {match.match_number}
         </span>
         <span
           className={`rounded px-2 py-0.5 text-sm font-bold ${
@@ -98,16 +102,21 @@ export default function CourtDisplay({ court, big = false }: { court: number; bi
               }`}
             >
               {big && (
-                <div className="mb-3 flex h-24 w-24 items-center justify-center rounded-full bg-white/20 text-4xl font-bold">
-                  {athlete ? initials(athlete.name) : '?'}
+                <div className="mb-3 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-white/20 text-4xl font-bold">
+                  {athlete?.photo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={athlete.photo_url} alt={athlete.name} className="h-full w-full object-cover" />
+                  ) : (
+                    athlete ? initials(athlete.name) : '?'
+                  )}
                 </div>
               )}
               <p className={`${nameSize} text-center font-bold`}>{athlete?.name ?? 'TBD'}</p>
               <p className="text-white/80">
-                {athlete?.country_code ?? ''} {athlete?.team ? `· ${athlete.team}` : ''}
+                {athlete?.country_code ?? ''} {athlete?.team ? `- ${athlete.team}` : ''}
               </p>
               <p className={`${scoreSize} font-black tabular-nums`}>{score}</p>
-              <p className="text-sm text-white/80">Fouls: {fouls}</p>
+              <p className="text-sm text-white/80">{t('Fouls')}: {fouls}</p>
             </div>
           );
         })}
