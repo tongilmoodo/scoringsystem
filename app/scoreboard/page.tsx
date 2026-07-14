@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import CourtDisplay from '@/components/CourtDisplay';
 
 export default function ScoreboardPage() {
