@@ -74,7 +74,10 @@ export default function AdminPage() {
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-black">Admin Dashboard</h1>
-        <div className="flex gap-3 text-sm">
+        <div className="flex flex-wrap gap-3 text-sm">
+          <Link href="/admin/draw" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Draw &amp; Bracket</Link>
+          <Link href="/admin/matches" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Manage Matches</Link>
+          <Link href="/admin/results" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Results</Link>
           <Link href="/admin/athletes" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Manage Athletes</Link>
           <Link href="/scoreboard" className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Scoreboard</Link>
           <button onClick={logout} className="rounded-lg bg-gray-800 px-4 py-2 font-bold">Logout ({user.name})</button>

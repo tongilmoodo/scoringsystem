@@ -1,5 +1,4 @@
 'use client';
-export const dynamic = 'force-dynamic';
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -13,6 +12,14 @@ interface EventRow {
   name: string;
 }
 
+interface PreviewRow {
+  name: string;
+  team: string;
+  country: string;
+  eventName: string;
+  event_id: string | null;
+}
+
 const EMPTY = { name: '', team: '', country_code: '', event_id: '', seed: '' };
 
 export default function AthletesPage() {
@@ -21,6 +28,8 @@ export default function AthletesPage() {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [csvText, setCsvText] = useState('');
+  const [preview, setPreview] = useState<PreviewRow[] | null>(null);
 
   const load = useCallback(async () => {
     const [{ data: ath }, { data: evs }] = await Promise.all([
@@ -68,6 +77,52 @@ export default function AthletesPage() {
     });
   }
 
+  // ---- Bulk CSV import (columns: Name, Team, Country, Event) --------------
+  function parseCsv() {
+    const rows = csvText
+      .trim()
+      .split(/\r?\n/)
+      .map((l) => l.split(',').map((c) => c.trim()));
+    const body = rows[0]?.[0]?.toLowerCase() === 'name' ? rows.slice(1) : rows;
+    setPreview(
+      body
+        .filter((r) => r[0])
+        .map((r) => {
+          const ev = events.find((e) => e.name.toLowerCase() === (r[3] ?? '').toLowerCase());
+          return {
+            name: r[0],
+            team: r[1] ?? '',
+            country: (r[2] ?? '').toUpperCase(),
+            eventName: r[3] ?? '',
+            event_id: ev?.id ?? null,
+          };
+        })
+    );
+  }
+
+  async function importCsv() {
+    if (!preview) return;
+    const valid = preview.filter((p) => p.event_id);
+    if (valid.length === 0) return;
+    await supabase.from('athletes').insert(
+      valid.map((p) => ({
+        name: p.name,
+        team: p.team || null,
+        country_code: p.country || null,
+        event_id: p.event_id,
+      }))
+    );
+    setPreview(null);
+    setCsvText('');
+    load();
+  }
+
+  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    file.text().then(setCsvText);
+  }
+
   if (!ready) return null;
   if (!user) return <PinPad title="Admin Login" onSubmit={login} />;
   if (user.role !== 'admin') {
@@ -110,6 +165,48 @@ export default function AthletesPage() {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Bulk CSV import */}
+      <div className="rounded-xl border border-gray-800 bg-gray-900 p-4">
+        <h2 className="mb-2 font-bold">Bulk import (CSV)</h2>
+        <p className="mb-2 text-sm text-gray-400">Columns: Name, Team, Country, Event. Paste below or upload a .csv file.</p>
+        <textarea
+          className={`${input} h-28 w-full font-mono text-sm`}
+          placeholder={'Name,Team,Country,Event\nJane Doe,Mombasa TMD,KE,Men Sparring -75kg'}
+          value={csvText}
+          onChange={(e) => setCsvText(e.target.value)}
+        />
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <input type="file" accept=".csv,text/csv" onChange={onFile} className="text-sm text-gray-400" />
+          <button onClick={parseCsv} disabled={!csvText.trim()} className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold disabled:opacity-40">Preview</button>
+          {preview && (
+            <>
+              <button onClick={importCsv} className="rounded-lg bg-green-700 px-4 py-2 text-sm font-bold">
+                Import {preview.filter((p) => p.event_id).length} valid rows
+              </button>
+              <button onClick={() => setPreview(null)} className="rounded-lg bg-gray-700 px-4 py-2 text-sm font-bold">Cancel</button>
+            </>
+          )}
+        </div>
+        {preview && (
+          <table className="mt-3 w-full text-left text-sm">
+            <thead className="text-gray-400">
+              <tr><th className="p-2">Name</th><th className="p-2">Team</th><th className="p-2">Country</th><th className="p-2">Event</th><th className="p-2">Status</th></tr>
+            </thead>
+            <tbody className="divide-y divide-gray-800">
+              {preview.map((p, i) => (
+                <tr key={i}>
+                  <td className="p-2">{p.name}</td>
+                  <td className="p-2">{p.team}</td>
+                  <td className="p-2">{p.country}</td>
+                  <td className="p-2">{p.eventName}</td>
+                  <td className="p-2">{p.event_id ? <span className="text-green-400">OK</span> : <span className="text-red-400">Unknown event</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Athletes table */}

@@ -6,3 +6,23 @@ html,
 body {
   height: 100%;
 }
+
+/* Print-optimised output for official records */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .print-sheet {
+    page-break-after: always;
+    border: 2px solid #000;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .print-sheet .signature-line {
+    border-top: 1px solid #000;
+    margin-top: 48px;
+    padding-top: 4px;
+    width: 220px;
+  }
+}

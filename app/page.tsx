@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 const LINKS = [
   { href: '/scoreboard', label: 'Public Scoreboard', desc: 'Live scores for both courts. No login.' },
+  { href: '/bracket', label: 'Tournament Bracket', desc: 'Live single-elimination bracket. No login.' },
   { href: '/court/1', label: 'Court A Scorer', desc: 'Tablet interface. Scorer PIN required.' },
   { href: '/court/2', label: 'Court B Scorer', desc: 'Tablet interface. Scorer PIN required.' },
   { href: '/admin', label: 'Admin Dashboard', desc: 'Tournament control. Admin PIN required.' },
