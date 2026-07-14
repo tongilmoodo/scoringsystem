@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
 import { useTournamentBySlug } from '@/lib/useTournament';
 import { useKiosk } from '@/lib/useKiosk';
+import { useHeartbeat } from '@/lib/useHeartbeat';
 import { playBeep, playBuzzer, playChime, playTick, playTimerStart, playBreak, playTakedown, playFanfare } from '@/lib/sounds';
 import PinPad from '@/components/PinPad';
 import VoiceScoring from '@/components/VoiceScoring';
@@ -75,6 +76,7 @@ export default function ControllerPage() {
 
   // Keep the tablet awake; warn on unload while the match is live.
   useKiosk(match?.status === 'live');
+  useHeartbeat(user?.id);
 
   const loadMatch = useCallback(async () => {
     if (!tournament) return;

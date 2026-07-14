@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/useAuth';
 import { useOfflineQueue } from '@/lib/store';
 import { useTournamentBySlug } from '@/lib/useTournament';
 import { useKiosk } from '@/lib/useKiosk';
+import { useHeartbeat } from '@/lib/useHeartbeat';
 import { playChime } from '@/lib/sounds';
 import PinPad from '@/components/PinPad';
 import Flag from '@/components/Flag';
@@ -67,6 +68,7 @@ export default function JudgePage() {
 
   // Keep the tablet awake; warn on unload while the match is live.
   useKiosk(match?.status === 'live');
+  useHeartbeat(user?.id);
 
   const loadMatch = useCallback(async () => {
     if (!tournament) return;
