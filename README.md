@@ -61,9 +61,9 @@ Live tournament scoring for 2 concurrent courts with real-time public scoreboard
 
 | Role | PIN | Access |
 | --- | --- | --- |
-| Admin | `123456` | All `/admin` pages, override on both courts |
-| Court A Scorer | `1111` | `/court/1` only |
-| Court B Scorer | `2222` | `/court/2` only |
+| Admin (Tournament Director) | `800811` | All `/admin` pages, override on both courts |
+| Court A Scorer | `8118111` | `/court/1` only |
+| Court B Scorer | `822822` | `/court/2` only |
 
 ### 4. Local development
 

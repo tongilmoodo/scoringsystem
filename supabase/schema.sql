@@ -357,7 +357,11 @@ INSERT INTO athletes (id, event_id, name, team, country_code, seed, lot_number) 
 -- would break PIN login: users.id must equal the Supabase auth user id and
 -- pin_hash must be a real bcrypt hash. Run instead:
 --   NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npm run seed:users
--- (creates: admin PIN 123456, Court A scorer PIN 1111, Court B scorer PIN 2222)
+--
+-- LOGIN CREDENTIALS (Demo):
+--   Admin (Tournament Director): PIN 800811
+--   Court A Scorer:              PIN 8118111
+--   Court B Scorer:              PIN 822822
 
 -- ============================================================
 -- SETUP INSTRUCTIONS

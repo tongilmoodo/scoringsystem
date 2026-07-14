@@ -6,8 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 // users table (containing PIN hashes) is not publicly readable.
 export async function POST(req: Request) {
   const { pin } = await req.json().catch(() => ({ pin: null }));
-  if (typeof pin !== 'string' || !/^(\d{4}|\d{6})$/.test(pin)) {
-    return NextResponse.json({ error: 'Enter a 4 or 6 digit PIN' }, { status: 400 });
+  if (typeof pin !== 'string' || !/^\d{4,8}$/.test(pin)) {
+    return NextResponse.json({ error: 'Enter a 4-8 digit PIN' }, { status: 400 });
   }
 
   const admin = createClient(

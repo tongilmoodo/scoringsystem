@@ -30,7 +30,7 @@ export default function PinPad({
       <h1 className="mb-2 text-2xl font-bold">{title}</h1>
       <p className="mb-4 h-6 text-red-400">{error}</p>
       <div className="mb-6 flex h-4 gap-3">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <span
             key={i}
             className={`h-4 w-4 rounded-full ${i < pin.length ? 'bg-white' : 'bg-gray-700'}`}
@@ -43,7 +43,7 @@ export default function PinPad({
             key={k}
             disabled={busy}
             onClick={() =>
-              k === 'C' ? setPin('') : k === 'OK' ? submit() : setPin((p) => (p + k).slice(0, 6))
+              k === 'C' ? setPin('') : k === 'OK' ? submit() : setPin((p) => (p + k).slice(0, 8))
             }
             className={`h-20 w-20 rounded-xl text-2xl font-bold active:opacity-70 ${
               k === 'OK' ? 'bg-green-600' : k === 'C' ? 'bg-red-700' : 'bg-gray-800'

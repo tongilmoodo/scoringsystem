@@ -12,9 +12,9 @@ if (!url || !key) {
 const admin = createClient(url, key);
 
 const USERS = [
-  { name: 'Tournament Admin', pin: '123456', role: 'admin', court_access: null },
-  { name: 'Court A Scorer', pin: '1111', role: 'scorer', court_access: 1 },
-  { name: 'Court B Scorer', pin: '2222', role: 'scorer', court_access: 2 },
+  { name: 'Tournament Director', pin: '800811', role: 'admin', court_access: null },
+  { name: 'Scorer Court A', pin: '8118111', role: 'scorer', court_access: 1 },
+  { name: 'Scorer Court B', pin: '822822', role: 'scorer', court_access: 2 },
 ];
 
 for (const u of USERS) {
