@@ -2,9 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --navy: #1a1a2e;
+  --crimson: #e94560;
+  --gold: #ffd700;
+  --bg-dark: #0f0f1a;
+  --bg-light: #f8f9fa;
+  --text-muted: #a0a0b0;
+  --success: #00d26a;
+  --warning: #ffa500;
+  --danger: #ff3333;
+}
+
 html,
 body {
   height: 100%;
+}
+
+body {
+  font-family: var(--font-inter), sans-serif;
+}
+
+/* Athletic condensed headline utility */
+.font-headline {
+  font-family: var(--font-oswald), sans-serif;
+}
+
+/* Huge scoreboard numerals with readable shadow from distance */
+.score-shadow {
+  text-shadow: 0 4px 20px #000000;
+}
+
+/* Gold particle burst on a committed score (CSS only) */
+.burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.burst span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--gold);
+  animation: burst-fly 600ms ease-out forwards;
+}
+@keyframes burst-fly {
+  to {
+    transform: translate(var(--dx), var(--dy)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Kiosk: block text selection + long-press callouts on tablets */
+.kiosk {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Print-optimised output for official records */
@@ -12,6 +69,9 @@ body {
   body {
     background: #fff !important;
     color: #000 !important;
+  }
+  .no-print {
+    display: none !important;
   }
   .print-sheet {
     page-break-after: always;
