@@ -10,13 +10,15 @@ export default function SingleCourtScoreboard() {
   const court = Number(params.court) === 2 ? 2 : 1;
   const { tournament, loading } = useTournamentBySlug(slug);
 
-  if (loading) return null;
+  if (loading) {
+    return <main className="flex min-h-screen items-center justify-center bg-black"><span className="animate-pulse text-text-muted">Loading&hellip;</span></main>;
+  }
   if (!tournament) {
-    return <main className="flex min-h-screen items-center justify-center text-gray-400">Tournament not found.</main>;
+    return <main className="flex min-h-screen items-center justify-center bg-black text-text-muted">Tournament not found.</main>;
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-black p-4">
+    <main className="h-screen w-screen overflow-hidden bg-black">
       <CourtDisplay court={court} tournamentId={tournament.id} big />
     </main>
   );
