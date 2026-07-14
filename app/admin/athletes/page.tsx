@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
 import PinPad from '@/components/PinPad';
+import CountrySelect from '@/components/CountrySelect';
+import { countryName, getFlagEmoji, resolveCountry } from '@/lib/countries';
 import type { Athlete } from '@/lib/types';
 
 interface EventRow {
@@ -15,7 +17,8 @@ interface EventRow {
 interface PreviewRow {
   name: string;
   team: string;
-  country: string;
+  countryInput: string;
+  code: string | null; // resolved ISO code (or manually selected)
   eventName: string;
   event_id: string | null;
 }
@@ -78,6 +81,7 @@ export default function AthletesPage() {
   }
 
   // ---- Bulk CSV import (columns: Name, Team, Country, Event) --------------
+  // Country is validated against the COUNTRIES list by name OR code.
   function parseCsv() {
     const rows = csvText
       .trim()
@@ -92,7 +96,8 @@ export default function AthletesPage() {
           return {
             name: r[0],
             team: r[1] ?? '',
-            country: (r[2] ?? '').toUpperCase(),
+            countryInput: r[2] ?? '',
+            code: resolveCountry(r[2] ?? ''),
             eventName: r[3] ?? '',
             event_id: ev?.id ?? null,
           };
@@ -100,15 +105,20 @@ export default function AthletesPage() {
     );
   }
 
+  function rowValid(p: PreviewRow) {
+    // Event must resolve; country must resolve if provided (or be fixed manually).
+    return !!p.event_id && (!p.countryInput || !!p.code);
+  }
+
   async function importCsv() {
     if (!preview) return;
-    const valid = preview.filter((p) => p.event_id);
+    const valid = preview.filter(rowValid);
     if (valid.length === 0) return;
     await supabase.from('athletes').insert(
       valid.map((p) => ({
         name: p.name,
         team: p.team || null,
-        country_code: p.country || null,
+        country_code: p.code,
         event_id: p.event_id,
       }))
     );
@@ -140,14 +150,16 @@ export default function AthletesPage() {
     <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-black">Athletes</h1>
-        <Link href="/admin" className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-bold">← Dashboard</Link>
+        <Link href="/admin" className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-bold">&larr; Dashboard</Link>
       </div>
 
       {/* Registration form */}
       <div className="grid gap-3 rounded-xl border border-gray-800 bg-gray-900 p-4 md:grid-cols-6">
         <input className={`${input} md:col-span-2`} placeholder="Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         <input className={input} placeholder="Team" value={form.team} onChange={(e) => setForm({ ...form, team: e.target.value })} />
-        <input className={input} placeholder="Country (KE)" maxLength={2} value={form.country_code} onChange={(e) => setForm({ ...form, country_code: e.target.value.toUpperCase() })} />
+        <div className="md:col-span-1">
+          <CountrySelect value={form.country_code} onChange={(code) => setForm({ ...form, country_code: code })} />
+        </div>
         <select className={input} value={form.event_id} onChange={(e) => setForm({ ...form, event_id: e.target.value })}>
           <option value="">Event *</option>
           {events.map((ev) => (
@@ -170,10 +182,12 @@ export default function AthletesPage() {
       {/* Bulk CSV import */}
       <div className="rounded-xl border border-gray-800 bg-gray-900 p-4">
         <h2 className="mb-2 font-bold">Bulk import (CSV)</h2>
-        <p className="mb-2 text-sm text-gray-400">Columns: Name, Team, Country, Event. Paste below or upload a .csv file.</p>
+        <p className="mb-2 text-sm text-gray-400">
+          Columns: Name, Team, Country, Event. Country accepts a full name (Kenya) or ISO code (KE).
+        </p>
         <textarea
           className={`${input} h-28 w-full font-mono text-sm`}
-          placeholder={'Name,Team,Country,Event\nJane Doe,Mombasa TMD,KE,Men Sparring -75kg'}
+          placeholder={'Name,Team,Country,Event\nJane Doe,Mombasa TMD,Kenya,Men\u2019s -78kg'}
           value={csvText}
           onChange={(e) => setCsvText(e.target.value)}
         />
@@ -183,7 +197,7 @@ export default function AthletesPage() {
           {preview && (
             <>
               <button onClick={importCsv} className="rounded-lg bg-green-700 px-4 py-2 text-sm font-bold">
-                Import {preview.filter((p) => p.event_id).length} valid rows
+                Import {preview.filter(rowValid).length} valid rows
               </button>
               <button onClick={() => setPreview(null)} className="rounded-lg bg-gray-700 px-4 py-2 text-sm font-bold">Cancel</button>
             </>
@@ -199,9 +213,33 @@ export default function AthletesPage() {
                 <tr key={i}>
                   <td className="p-2">{p.name}</td>
                   <td className="p-2">{p.team}</td>
-                  <td className="p-2">{p.country}</td>
+                  <td className="p-2">
+                    {p.code ? (
+                      <span>{getFlagEmoji(p.code)} {countryName(p.code)}</span>
+                    ) : p.countryInput ? (
+                      <CountrySelect
+                        value=""
+                        placeholder={`\u201c${p.countryInput}\u201d?`}
+                        onChange={(code) =>
+                          setPreview((rows) =>
+                            rows ? rows.map((r, j) => (j === i ? { ...r, code } : r)) : rows
+                          )
+                        }
+                      />
+                    ) : (
+                      <span className="text-gray-500">-</span>
+                    )}
+                  </td>
                   <td className="p-2">{p.eventName}</td>
-                  <td className="p-2">{p.event_id ? <span className="text-green-400">OK</span> : <span className="text-red-400">Unknown event</span>}</td>
+                  <td className="p-2">
+                    {!p.event_id ? (
+                      <span className="text-red-400">Unknown event</span>
+                    ) : p.countryInput && !p.code ? (
+                      <span className="text-yellow-400">Unrecognized country &mdash; please select manually</span>
+                    ) : (
+                      <span className="text-green-400">OK</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -228,7 +266,9 @@ export default function AthletesPage() {
               <tr key={a.id}>
                 <td className="p-3 font-bold">{a.name}</td>
                 <td className="p-3">{a.team}</td>
-                <td className="p-3">{a.country_code}</td>
+                <td className="p-3" title={a.country_code ? countryName(a.country_code) : ''}>
+                  {a.country_code ? `${getFlagEmoji(a.country_code)} ${a.country_code}` : ''}
+                </td>
                 <td className="p-3">{events.find((e) => e.id === a.event_id)?.name}</td>
                 <td className="p-3">{a.seed}</td>
                 <td className="p-3">{a.lot_number}</td>

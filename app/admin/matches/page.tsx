@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
 import PinPad from '@/components/PinPad';
+import { countryName, getFlagEmoji } from '@/lib/countries';
 import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match } from '@/lib/types';
 
 const ROUNDS = ['round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'third_place', 'final'] as const;
@@ -137,8 +138,8 @@ export default function MatchesPage() {
                 <tr key={m.id}>
                   <td className="p-3">{m.match_number}</td>
                   <td className="p-3">{ROUND_LABELS[m.round]}</td>
-                  <td className="p-3 text-blue-400">{m.blue?.name ?? 'TBD'}</td>
-                  <td className="p-3 text-red-400">{m.red?.name ?? 'TBD'}</td>
+                  <td className="p-3 text-blue-400">{m.blue?.country_code ? `${getFlagEmoji(m.blue.country_code)} ` : ''}{m.blue?.name ?? 'TBD'}</td>
+                  <td className="p-3 text-red-400">{m.red?.country_code ? `${getFlagEmoji(m.red.country_code)} ` : ''}{m.red?.name ?? 'TBD'}</td>
                   <td className="p-3 tabular-nums">{m.blue_score} : {m.red_score}</td>
                   <td className="p-3">{m.court_number ? (m.court_number === 1 ? 'A' : 'B') : '-'}</td>
                   <td className="p-3">{m.status}</td>
@@ -187,14 +188,14 @@ export default function MatchesPage() {
                 <tr>
                   <td style={{ border: '1px solid #000', padding: 8, fontWeight: 700 }}>BLUE</td>
                   <td style={{ border: '1px solid #000', padding: 8 }}>{m.blue?.name ?? 'TBD'}</td>
-                  <td style={{ border: '1px solid #000', padding: 8 }}>{m.blue?.team} {m.blue?.country_code}</td>
+                  <td style={{ border: '1px solid #000', padding: 8 }}>{m.blue?.team} {m.blue?.country_code ? `(${countryName(m.blue.country_code)})` : ''}</td>
                   <td style={{ border: '1px solid #000', padding: 8, textAlign: 'center' }}>{m.blue_score}</td>
                   <td style={{ border: '1px solid #000', padding: 8, textAlign: 'center' }}>{m.blue_fouls}</td>
                 </tr>
                 <tr>
                   <td style={{ border: '1px solid #000', padding: 8, fontWeight: 700 }}>RED</td>
                   <td style={{ border: '1px solid #000', padding: 8 }}>{m.red?.name ?? 'TBD'}</td>
-                  <td style={{ border: '1px solid #000', padding: 8 }}>{m.red?.team} {m.red?.country_code}</td>
+                  <td style={{ border: '1px solid #000', padding: 8 }}>{m.red?.team} {m.red?.country_code ? `(${countryName(m.red.country_code)})` : ''}</td>
                   <td style={{ border: '1px solid #000', padding: 8, textAlign: 'center' }}>{m.red_score}</td>
                   <td style={{ border: '1px solid #000', padding: 8, textAlign: 'center' }}>{m.red_fouls}</td>
                 </tr>

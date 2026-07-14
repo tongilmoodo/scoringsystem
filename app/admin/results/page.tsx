@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
 import PinPad from '@/components/PinPad';
+import Flag from '@/components/Flag';
+import { countryName, getFlagEmoji } from '@/lib/countries';
 import { ATHLETE_SELECT, ROUND_LABELS, type Match } from '@/lib/types';
 
 interface MedalRow {
@@ -122,7 +124,12 @@ export default function ResultsPage() {
             <tbody className="divide-y divide-gray-800">
               {medals.map((r) => (
                 <tr key={r.country}>
-                  <td className="p-2 font-bold">{r.country}</td>
+                  <td className="p-2 font-bold">
+                    <span className="inline-flex items-center gap-2">
+                      <Flag code={r.country} size={22} />
+                      {countryName(r.country)}
+                    </span>
+                  </td>
                   <td className="p-2 tabular-nums">{r.gold}</td>
                   <td className="p-2 tabular-nums">{r.silver}</td>
                   <td className="p-2 tabular-nums">{r.bronze}</td>
@@ -144,8 +151,8 @@ export default function ResultsPage() {
               <li key={m.id} className="flex flex-wrap justify-between gap-2 py-2">
                 <span>
                   <span className="text-gray-500">#{m.match_number}</span> {ROUND_LABELS[m.round]}:{' '}
-                  <span className="text-blue-400">{m.blue?.name ?? 'TBD'}</span> {m.blue_score} : {m.red_score}{' '}
-                  <span className="text-red-400">{m.red?.name ?? 'TBD'}</span>
+                  <span className="text-blue-400">{m.blue?.country_code ? `${getFlagEmoji(m.blue.country_code)} ` : ''}{m.blue?.name ?? 'TBD'}</span> {m.blue_score} : {m.red_score}{' '}
+                  <span className="text-red-400">{m.red?.country_code ? `${getFlagEmoji(m.red.country_code)} ` : ''}{m.red?.name ?? 'TBD'}</span>
                 </span>
                 <span className="font-bold">
                   {winnerOf(m)?.name} <span className="font-normal text-gray-400">by {m.win_method}</span>

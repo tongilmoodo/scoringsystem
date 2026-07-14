@@ -1,5 +1,6 @@
 'use client';
 
+import { getFlagEmoji } from '@/lib/countries';
 import { ROUND_LABELS, type Match } from '@/lib/types';
 
 const ORDER: Match['round'][] = ['round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'third_place', 'final'];
@@ -41,11 +42,11 @@ export default function BracketView({
                   {m.court_number ? ` · Court ${m.court_number === 1 ? 'A' : 'B'}` : ''}
                 </p>
                 <p className={m.winner_id && m.winner_id === m.blue_athlete_id ? 'font-black' : ''}>
-                  <span className="text-blue-400">{m.blue?.name ?? 'TBD'}</span>
+                  <span className="text-blue-400">{m.blue?.country_code ? `${getFlagEmoji(m.blue.country_code)} ` : ''}{m.blue?.name ?? 'TBD'}</span>
                   <span className="float-right tabular-nums">{m.blue_score}</span>
                 </p>
                 <p className={m.winner_id && m.winner_id === m.red_athlete_id ? 'font-black' : ''}>
-                  <span className="text-red-400">{m.red?.name ?? 'TBD'}</span>
+                  <span className="text-red-400">{m.red?.country_code ? `${getFlagEmoji(m.red.country_code)} ` : ''}{m.red?.name ?? 'TBD'}</span>
                   <span className="float-right tabular-nums">{m.red_score}</span>
                 </p>
               </button>

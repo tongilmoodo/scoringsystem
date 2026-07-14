@@ -23,6 +23,7 @@ Live tournament scoring for 2 concurrent courts with real-time public scoreboard
 - **Multi-language UI**: detects `navigator.language`; English, Swahili, French, Spanish. Static dictionaries for common labels, Gemini translates the rest (cached in localStorage). Public scoreboard auto-translates per viewer.
 - **Keyboard shortcuts** for scorers (see below)
 - **Sound effects**: buzzer at time-up, chime on score, warning beep on foul (Web Audio, no assets)
+- **Standard country list + flags**: `i18n-iso-countries` is the single source of truth; searchable country picker on athlete registration; self-hosted SVG flags (`country-flag-icons`, copied to `public/flags` on install) on scoreboards/TVs with emoji fallback in compact rows; CSV import validates countries by name or code
 - Undo (20 actions), lock screen, disqualification at 3 fouls, win-method dialogs
 
 ## Keyboard shortcuts (controller tablets with keyboards; 1/2/3/F commit as manual override)

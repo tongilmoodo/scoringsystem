@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/useAuth';
 import { playBeep, playBuzzer, playChime } from '@/lib/sounds';
 import PinPad from '@/components/PinPad';
 import VoiceScoring from '@/components/VoiceScoring';
+import Flag from '@/components/Flag';
 import {
   ACTION_LABELS,
   ATHLETE_SELECT,
@@ -343,7 +344,7 @@ export default function ControllerPage() {
             <div key={side} className={`flex flex-col gap-3 rounded-xl p-4 ${base}`}>
               <div className="text-center">
                 <p className="text-2xl font-bold">{athlete?.name ?? 'TBD'}</p>
-                <p className="text-white/80">{athlete?.country_code} {athlete?.team ? `- ${athlete.team}` : ''}</p>
+                <p className="flex items-center justify-center gap-2 text-white/80"><Flag code={athlete?.country_code} size={24} /><span>{athlete?.team ?? ''}</span></p>
                 <p className="text-8xl font-black tabular-nums">{score}</p>
                 <p className="text-white/80">Fouls: {fouls} / {MAX_FOULS}</p>
               </div>

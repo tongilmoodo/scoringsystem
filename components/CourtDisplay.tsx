@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useTranslation } from '@/lib/i18n';
+import Flag from '@/components/Flag';
 import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match } from '@/lib/types';
 
 const LABELS = ['Court', 'Match', 'No active match', 'Fouls'];
@@ -112,8 +113,9 @@ export default function CourtDisplay({ court, big = false }: { court: number; bi
                 </div>
               )}
               <p className={`${nameSize} text-center font-bold`}>{athlete?.name ?? 'TBD'}</p>
-              <p className="text-white/80">
-                {athlete?.country_code ?? ''} {athlete?.team ? `- ${athlete.team}` : ''}
+              <p className="flex items-center justify-center gap-2 text-white/80">
+                <Flag code={athlete?.country_code} size={big ? 40 : 24} />
+                <span>{athlete?.team ?? ''}</span>
               </p>
               <p className={`${scoreSize} font-black tabular-nums`}>{score}</p>
               <p className="text-sm text-white/80">{t('Fouls')}: {fouls}</p>
