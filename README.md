@@ -106,7 +106,7 @@ Open http://localhost:3000, generate a bracket at `/admin/draw`, assign matches 
 
 **The night before**
 - [ ] Charge both scorer tablets + spares; disable OS auto-lock and notifications
-- [ ] Test PIN login on each tablet (`1111` on the Court A device only, `2222` on Court B only)
+- [ ] Test PIN login on each tablet (`8118111` on the Court A device only, `822822` on Court B only)
 - [ ] Test voice scoring in the actual hall (microphone permissions, background noise)
 - [ ] Verify TVs load `/scoreboard/1` and `/scoreboard/2` full-screen
 - [ ] Confirm venue Wi-Fi and a mobile hotspot fallback
