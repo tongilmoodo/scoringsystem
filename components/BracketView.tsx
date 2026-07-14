@@ -2,7 +2,7 @@
 
 import { ROUND_LABELS, type Match } from '@/lib/types';
 
-const ORDER: Match['round'][] = ['round_of_16', 'quarter_final', 'semi_final', 'final'];
+const ORDER: Match['round'][] = ['round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'third_place', 'final'];
 
 // Colour code: scheduled = gray, live = green, completed = blue.
 function color(status: string) {

@@ -6,6 +6,7 @@ export interface Athlete {
   name: string;
   team: string | null;
   country_code: string | null;
+  photo_url?: string | null;
   seed: number | null;
   lot_number: number | null;
 }
@@ -14,7 +15,7 @@ export interface Match {
   id: string;
   event_id: string;
   court_number: number | null;
-  round: 'round_of_16' | 'quarter_final' | 'semi_final' | 'final';
+  round: 'round_of_32' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'third_place' | 'final';
   match_number: number;
   blue_athlete_id: string | null;
   red_athlete_id: string | null;
@@ -24,10 +25,11 @@ export interface Match {
   red_fouls: number;
   status: 'scheduled' | 'assigned' | 'live' | 'paused' | 'completed';
   winner_id: string | null;
-  win_method: 'points' | 'ko' | 'disqualification' | 'withdrawal' | null;
+  win_method: 'points' | 'ko' | 'disqualification' | 'withdrawal' | 'forfeit' | null;
   timer_seconds: number;
   max_time: number;
   timer_started_at: string | null;
+  timer_paused_at?: string | null;
   next_match_id: string | null;
   next_match_position: Side | null;
   blue?: Athlete | null;
@@ -37,18 +39,21 @@ export interface Match {
 export interface ScoreEvent {
   id: string;
   match_id: string;
+  athlete_id?: string | null;
   player_side: Side;
-  action_type: 'point_1' | 'point_2' | 'point_3' | 'foul';
+  action_type: 'point_1' | 'point_2' | 'point_3' | 'foul' | 'win_blue' | 'win_red';
   points: number;
-  match_time_seconds: number;
+  match_time_seconds: number | null;
   scored_by: string | null;
   created_at: string;
 }
 
 export const ROUND_LABELS: Record<Match['round'], string> = {
+  round_of_32: 'Round of 32',
   round_of_16: 'Round of 16',
   quarter_final: 'Quarter Final',
   semi_final: 'Semi Final',
+  third_place: 'Third Place',
   final: 'Final',
 };
 

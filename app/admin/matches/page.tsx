@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/useAuth';
 import PinPad from '@/components/PinPad';
 import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match } from '@/lib/types';
 
-const ROUNDS = ['round_of_16', 'quarter_final', 'semi_final', 'final'] as const;
+const ROUNDS = ['round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'third_place', 'final'] as const;
 const STATUSES = ['scheduled', 'assigned', 'live', 'paused', 'completed'] as const;
 
 export default function MatchesPage() {
