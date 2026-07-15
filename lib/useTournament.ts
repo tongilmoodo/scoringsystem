@@ -45,16 +45,33 @@ export function useTournamentBySlug(slug: string) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!slug) return;
-    supabase
-      .from('tournaments')
-      .select('id, slug, name, courts_count, status, date, location')
-      .eq('slug', slug)
-      .maybeSingle()
-      .then(({ data }) => {
-        setTournament((data as ActiveTournament | null) ?? null);
-        setLoading(false);
-      });
+    if (!slug) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+
+    // Always resolve loading — on success, error, or exception — otherwise a
+    // rejected query (network/RLS) leaves the TV scoreboard stuck on "Loading…".
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('tournaments')
+          .select('id, slug, name, courts_count, status, date, location')
+          .eq('slug', slug)
+          .maybeSingle();
+        if (!cancelled) setTournament((data as ActiveTournament | null) ?? null);
+      } catch {
+        if (!cancelled) setTournament(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   return { tournament, loading };

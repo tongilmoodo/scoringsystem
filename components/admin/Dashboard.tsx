@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
 import { useActiveTournament, type ActiveTournament } from '@/lib/useTournament';
+import { useCourtPresence } from '@/lib/usePresence';
 import PinPad from '@/components/PinPad';
 import Logo from '@/components/ui/Logo';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -22,7 +23,6 @@ interface JudgeUser {
 }
 
 const EMPTY_FORM = { name: '', date: '', location: '', courts_count: 2 };
-const ONLINE_MS = 60000;
 
 export default function Dashboard() {
   const { user, ready, login, logout } = useAuth();
@@ -34,7 +34,10 @@ export default function Dashboard() {
   const [scheduled, setScheduled] = useState<Match[]>([]);
   const [events, setEvents] = useState<ScoreEvent[]>([]);
   const [judges, setJudges] = useState<JudgeUser[]>([]);
-  const [now, setNow] = useState(Date.now());
+
+  // Live connection presence per court (green/grey dots). Subscribe to both
+  // possible courts unconditionally so hook order is stable across renders.
+  const presence = useCourtPresence([1, 2]);
 
   const loadTournaments = useCallback(async () => {
     const { data } = await supabase.from('tournaments').select('*').order('date', { ascending: false });
@@ -43,15 +46,35 @@ export default function Dashboard() {
 
   const load = useCallback(async () => {
     if (!tournament) return;
+    // matches has no tournament_id column — resolve the tournament's event ids
+    // first, then filter matches / score_events through event_id.
+    const { data: evRows } = await supabase
+      .from('events')
+      .select('id')
+      .eq('tournament_id', tournament.id);
+    const evIds = (evRows ?? []).map((e: { id: string }) => e.id);
+
+    if (evIds.length === 0) {
+      setCourtMatches({ 1: null, 2: null });
+      setScheduled([]);
+      setEvents([]);
+    }
+
     const [{ data: active }, { data: sched }, { data: evs }, { data: js }] = await Promise.all([
-      supabase.from('matches').select(ATHLETE_SELECT).eq('tournament_id', tournament.id).in('status', ['assigned', 'live', 'paused']),
-      supabase.from('matches').select(ATHLETE_SELECT).eq('tournament_id', tournament.id).eq('status', 'scheduled').order('match_number'),
-      supabase
-        .from('score_events')
-        .select('*, match:matches!inner(tournament_id)')
-        .eq('match.tournament_id', tournament.id)
-        .order('created_at', { ascending: false })
-        .limit(15),
+      evIds.length
+        ? supabase.from('matches').select(ATHLETE_SELECT).in('event_id', evIds).in('status', ['assigned', 'live', 'paused'])
+        : Promise.resolve({ data: [] as Match[] }),
+      evIds.length
+        ? supabase.from('matches').select(ATHLETE_SELECT).in('event_id', evIds).eq('status', 'scheduled').order('match_number')
+        : Promise.resolve({ data: [] as Match[] }),
+      evIds.length
+        ? supabase
+            .from('score_events')
+            .select('*, match:matches!inner(event_id)')
+            .in('match.event_id', evIds)
+            .order('created_at', { ascending: false })
+            .limit(15)
+        : Promise.resolve({ data: [] as ScoreEvent[] }),
       supabase
         .from('users')
         .select('id, name, court_access, last_active_at')
@@ -85,7 +108,6 @@ export default function Dashboard() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'score_events' }, load)
       .subscribe();
     const poll = setInterval(() => {
-      setNow(Date.now());
       load();
     }, 15000);
     return () => {
@@ -193,12 +215,18 @@ export default function Dashboard() {
 
   // ---- Dashboard widgets --------------------------------------------------
   const courts = Array.from({ length: tournament.courts_count }, (_, i) => i + 1);
-  const isOnline = (u: JudgeUser) => u.last_active_at && now - new Date(u.last_active_at).getTime() < ONLINE_MS;
+
+  // A judge is "online" only if they are present in the live court presence
+  // channel — a valid PIN session is not enough, the app must be open.
+  const isOnline = (u: JudgeUser) =>
+    u.court_access != null && (presence[u.court_access]?.has(u.id) ?? false);
+  const onlineCount = (court: number) =>
+    judges.filter((j) => j.court_access === court && isOnline(j)).length;
 
   // Court health: green = match live + judges online, yellow = degraded, red = offline/none.
   function courtHealth(court: number): 'green' | 'yellow' | 'red' {
     const m = courtMatches[court];
-    const online = judges.filter((j) => j.court_access === court && isOnline(j)).length;
+    const online = onlineCount(court);
     if (!m) return 'red';
     if (online >= 4) return 'green';
     if (online >= 2) return 'yellow';
@@ -207,7 +235,7 @@ export default function Dashboard() {
 
   const alerts: string[] = [];
   courts.forEach((c) => {
-    const online = judges.filter((j) => j.court_access === c && isOnline(j)).length;
+    const online = onlineCount(c);
     if (online < 4 && courtMatches[c]) alerts.push(`Court ${c === 1 ? 'A' : 'B'}: only ${online}/4 judges online`);
   });
 
@@ -266,7 +294,7 @@ export default function Dashboard() {
               <span className={`h-3.5 w-3.5 rounded-full ${healthColor[courtHealth(c)]}`} />
               <span className="text-sm">Court {c === 1 ? 'A' : 'B'}</span>
               <span className="text-sm text-text-muted">
-                {courtMatches[c] ? `${courtMatches[c]!.status} \u00b7 ${judges.filter((j) => j.court_access === c && isOnline(j)).length}/4 judges` : 'no active match'}
+                {courtMatches[c] ? `${courtMatches[c]!.status} \u00b7 ${onlineCount(c)}/4 judges` : 'no active match'}
               </span>
             </div>
           ))}
