@@ -6,10 +6,13 @@ import { supabase } from '@/lib/supabase/client';
 import CourtDisplay from '@/components/CourtDisplay';
 import Logo from '@/components/ui/Logo';
 import { useTournamentBySlug } from '@/lib/useTournament';
+import { useLoadTimeout } from '@/lib/loadState';
+import LoadFallback from '@/components/ui/LoadFallback';
 
 export default function ScoreboardPage() {
   const slug = String(useParams().slug);
-  const { tournament, loading } = useTournamentBySlug(slug);
+  const { tournament, loading, error, retry, attempt } = useTournamentBySlug(slug);
+  const timedOut = useLoadTimeout(loading ? 'loading' : 'ready', attempt);
   const [eventNames, setEventNames] = useState<Record<number, string>>({});
 
   // Resolve the current event name shown on each court's active match.
@@ -40,8 +43,11 @@ export default function ScoreboardPage() {
       });
   }, [tournament?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (loading) {
-    return <main className="flex min-h-screen items-center justify-center bg-bg-dark"><span className="animate-pulse text-text-muted">Loading&hellip;</span></main>;
+  if (loading && !timedOut && !error) {
+    return <LoadFallback timedOut={false} onRetry={retry} />;
+  }
+  if (error || (loading && timedOut)) {
+    return <LoadFallback timedOut={timedOut} error={error} onRetry={retry} />;
   }
   if (!tournament) {
     return <main className="flex min-h-screen items-center justify-center bg-bg-dark text-text-muted">Tournament not found.</main>;

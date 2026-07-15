@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import CourtDisplay from '@/components/CourtDisplay';
+import { formatSupabaseError, useLoadTimeout } from '@/lib/loadState';
+import LoadFallback from '@/components/ui/LoadFallback';
 import type { Tournament } from '@/lib/types';
 
 // Public landing: shows ONLY the live scoreboard. Auto-detects the active
@@ -10,21 +12,34 @@ import type { Tournament } from '@/lib/types';
 export default function PublicScoreboard() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const timedOut = useLoadTimeout(loading ? 'loading' : 'ready', attempt);
+  const retry = () => setAttempt((n) => n + 1);
   const [eventNames, setEventNames] = useState<Record<number, string>>({});
 
   useEffect(() => {
     async function detect() {
       // Prefer a live tournament; fall back to the most recent one with an active match.
-      const { data: live } = await supabase
+      const { data: live, error: qErr } = await supabase
         .from('tournaments')
         .select('*')
         .eq('status', 'live')
         .order('date', { ascending: false })
         .limit(1)
         .maybeSingle();
-      setTournament((live as Tournament | null) ?? null);
+      if (qErr) {
+        // eslint-disable-next-line no-console
+        console.error('[public scoreboard] tournament query failed', qErr);
+        setError(formatSupabaseError(qErr));
+        setTournament(null);
+      } else {
+        setError(null);
+        setTournament((live as Tournament | null) ?? null);
+      }
       setLoading(false);
     }
+    setLoading(true);
     detect();
     const ch = supabase
       .channel('public-detect')
@@ -33,7 +48,8 @@ export default function PublicScoreboard() {
     return () => {
       supabase.removeChannel(ch);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attempt]);
 
   useEffect(() => {
     if (!tournament) return;
@@ -62,12 +78,11 @@ export default function PublicScoreboard() {
       });
   }, [tournament?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (loading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-bg-dark">
-        <span className="animate-pulse font-headline text-xl uppercase tracking-widest text-text-muted">Loading&hellip;</span>
-      </main>
-    );
+  if (loading && !timedOut && !error) {
+    return <LoadFallback timedOut={false} onRetry={retry} />;
+  }
+  if (error || (loading && timedOut)) {
+    return <LoadFallback timedOut={timedOut} error={error} onRetry={retry} />;
   }
 
   if (!tournament) {
