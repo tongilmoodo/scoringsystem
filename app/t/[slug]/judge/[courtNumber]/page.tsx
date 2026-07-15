@@ -10,6 +10,7 @@ import { useKiosk } from '@/lib/useKiosk';
 import { useHeartbeat } from '@/lib/useHeartbeat';
 import { useTrackPresence } from '@/lib/usePresence';
 import { playChime } from '@/lib/sounds';
+import { audio } from '@/lib/audio';
 import PinPad from '@/components/PinPad';
 import Flag from '@/components/Flag';
 import BroadcastBanner from '@/components/BroadcastBanner';
@@ -139,6 +140,13 @@ export default function JudgePage() {
         { event: '*', schema: 'public', table: 'judge_votes', filter: `match_id=eq.${match.id}` },
         () => loadVotes()
       )
+      // A committed score is written to score_events — play the score cue when
+      // one lands for this match (consensus reached or manual commit).
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'score_events', filter: `match_id=eq.${match.id}` },
+        () => audio.playScore()
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
@@ -219,10 +227,13 @@ export default function JudgePage() {
         setFlash({ side, text: `${label(action)} COMMITTED!` });
         setTimeout(() => setFlash(null), 1500);
       } else {
+        // Counts may be absent in some result shapes; always show integers.
+        const topVotes = Number(res.top_votes ?? res.votes ?? 0);
+        const myVotes = Number(res.votes ?? 0);
         const text =
           res.top_action && res.top_action !== action
-            ? `${res.top_votes} votes for ${label(res.top_action)}, ${res.votes} for ${label(action)} \u2014 need 3 to agree`
-            : `Vote recorded \u2014 waiting for consensus (${res.votes}/4)`;
+            ? `${topVotes} votes for ${label(res.top_action)}, ${myVotes} for ${label(action)} \u2014 need 3 to agree`
+            : `Vote recorded \u2014 waiting for consensus (${myVotes}/4)`;
         setFeedback({ side, text, kind: 'wait' });
       }
       loadVotes();
