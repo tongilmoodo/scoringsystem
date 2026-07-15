@@ -9,6 +9,7 @@ import { useKiosk } from '@/lib/useKiosk';
 import { useHeartbeat } from '@/lib/useHeartbeat';
 import { useTrackPresence } from '@/lib/usePresence';
 import { playBeep, playBuzzer, playChime, playTick, playTimerStart, playBreak, playTakedown, playFanfare } from '@/lib/sounds';
+import { audio } from '@/lib/audio';
 import PinPad from '@/components/PinPad';
 import VoiceScoring from '@/components/VoiceScoring';
 import Flag from '@/components/Flag';
@@ -223,6 +224,7 @@ export default function ControllerPage() {
     if (!m || remainingRef.current <= 0) return;
     setRunning(true);
     playTimerStart();
+    audio.playMatchStart();
     await supabase
       .from('matches')
       .update({ status: 'live', timer_started_at: new Date().toISOString(), timer_paused_at: null, timer_seconds: remainingRef.current })
@@ -398,6 +400,7 @@ export default function ControllerPage() {
       })
       .eq('id', m.id);
     playFanfare();
+    audio.playMatchEnd();
     setWinDialog(null);
     setDqSide(null);
     setLog([]);
