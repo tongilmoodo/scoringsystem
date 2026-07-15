@@ -58,6 +58,12 @@ export interface Match {
   takedown_timer_seconds: number;
   timer_started_at: string | null;
   timer_paused_at?: string | null;
+  total_rounds?: number;
+  break_started_at?: string | null;
+  round_scores?: Record<string, { blue: number; red: number }> | null;
+  ended_at?: string | null;
+  updated_at?: string | null;
+  tournament_id?: string | null;
   next_match_id: string | null;
   next_match_position: Side | null;
   blue?: Athlete | null;
@@ -90,13 +96,23 @@ export interface ScoreEvent {
 }
 
 export interface CastVoteResult {
-  committed: boolean;
-  error?: 'already_voted' | 'locked' | 'match_completed' | 'break';
+  success?: boolean;
+  committed?: boolean;
+  // Legacy error keys (older cast_vote) + new code/error strings.
+  error?: string;
+  code?: 'MATCH_NOT_FOUND' | 'MATCH_NOT_ACTIVE' | string;
+  current_status?: string;
   action?: string;
+  action_display?: string;
+  points?: number;
   votes?: number;
   top_action?: string;
   top_votes?: number;
+  total_votes?: number;
+  threshold?: number;
   side?: Side;
+  player_side?: Side;
+  message?: string;
   takedown?: boolean;
 }
 

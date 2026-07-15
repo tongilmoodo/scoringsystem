@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useTranslation } from '@/lib/i18n';
 import { getFlagUrl, countryName } from '@/lib/countries';
 import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match, type Side } from '@/lib/types';
+import { audio } from '@/lib/audio';
 
 const LABELS = ['Court', 'Match', 'No active match', 'Fouls', 'Round Break', 'Round', 'Waiting for match assignment'];
 
@@ -35,6 +36,9 @@ export default function CourtDisplay({
   const [now, setNow] = useState(Date.now());
   const [popSide, setPopSide] = useState<Record<Side, number>>({ blue: 0, red: 0 });
   const prevScores = useRef<{ blue: number; red: number } | null>(null);
+  // Track match id + status transitions to fire lifecycle audio cues.
+  const prevMatchId = useRef<string | null>(null);
+  const prevStatus = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     // matches has no tournament_id column — join through events
@@ -70,6 +74,21 @@ export default function CourtDisplay({
       supabase.removeChannel(ch);
     };
   }, [court, tournamentId, load]);
+
+  // Lifecycle audio: bell when a new match loads onto the court (auto-advance),
+  // end tone when a match completes.
+  useEffect(() => {
+    const id = match?.id ?? null;
+    const status = match?.status ?? null;
+    if (id && id !== prevMatchId.current && prevMatchId.current !== null) {
+      audio.playMatchStart();
+    }
+    if (status === 'completed' && prevStatus.current && prevStatus.current !== 'completed') {
+      audio.playMatchEnd();
+    }
+    prevMatchId.current = id;
+    prevStatus.current = status;
+  }, [match?.id, match?.status]);
 
   // Trigger the score-pop animation when a side's score increases.
   useEffect(() => {

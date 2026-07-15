@@ -83,6 +83,39 @@ export class TournamentAudio {
       /* audio unavailable */
     }
   }
+
+  // High D6 chime for a committed consensus score.
+  playScoreCommitted() {
+    this.playScore();
+  }
+
+  // Break-ending cue: reuse the match-start bell.
+  playBreakEnd() {
+    this.playMatchStart();
+  }
+
+  // Double 800Hz square beep — generic warning (e.g. break nearly over).
+  playWarning() {
+    if (muted() || typeof window === 'undefined') return;
+    try {
+      const ctx = this.getContext();
+      const now = ctx.currentTime;
+      [0, 0.2].forEach((delay) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = 800;
+        osc.type = 'square';
+        gain.gain.setValueAtTime(0.2, now + delay);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + delay + 0.15);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + delay);
+        osc.stop(now + delay + 0.15);
+      });
+    } catch {
+      /* audio unavailable */
+    }
+  }
 }
 
 export const audio = new TournamentAudio();

@@ -26,6 +26,7 @@ export default function DrawPage() {
   const [selected, setSelected] = useState('');
   const [detail, setDetail] = useState<Match | null>(null);
   const [busy, setBusy] = useState(false);
+  const [totalRounds, setTotalRounds] = useState(1);
 
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -79,7 +80,7 @@ export default function DrawPage() {
     setError(null);
     setSuccessMsg(null);
     try {
-      const { lots, rounds } = generateBracket(selected, eventAthletes);
+      const { lots, rounds } = generateBracket(selected, eventAthletes, totalRounds);
 
       // 1. Delete existing matches
       const { error: delErr } = await supabase.from('matches').delete().eq('event_id', selected);
@@ -195,6 +196,18 @@ export default function DrawPage() {
         {selected && (
           <>
             <span className="text-gray-400">{eventAthletes.length} athletes registered</span>
+            <label className="flex items-center gap-2 text-sm text-gray-300">
+              Rounds/match
+              <select
+                className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-2"
+                value={totalRounds}
+                onChange={(e) => setTotalRounds(Number(e.target.value))}
+              >
+                <option value={1}>1</option>
+                <option value={2}>2</option>
+                <option value={3}>3</option>
+              </select>
+            </label>
             <button disabled={busy} onClick={generate} className="rounded-lg bg-green-700 px-4 py-2 font-bold disabled:opacity-40">
               {busy ? 'Working…' : matches.length > 0 ? 'Re-draw' : 'Generate Draw'}
             </button>
