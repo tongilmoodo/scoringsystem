@@ -58,6 +58,12 @@ export interface Match {
   takedown_timer_seconds: number;
   timer_started_at: string | null;
   timer_paused_at?: string | null;
+  total_rounds?: number;
+  break_started_at?: string | null;
+  round_scores?: Record<string, { blue: number; red: number }> | null;
+  ended_at?: string | null;
+  updated_at?: string | null;
+  tournament_id?: string | null;
   next_match_id: string | null;
   next_match_position: Side | null;
   blue?: Athlete | null;
