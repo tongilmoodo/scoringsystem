@@ -213,27 +213,23 @@ export default function JudgePage() {
       });
       if (error) throw error;
       const res = data as CastVoteResult;
-      if (res.error === 'already_voted') {
-        setFeedback({ side, text: 'You already voted \u2014 waiting for consensus', kind: 'err' });
-      } else if (res.error === 'locked') {
-        setFeedback({ side, text: 'Judges locked by controller', kind: 'err' });
-      } else if (res.error === 'break') {
-        setFeedback({ side, text: 'Round break \u2014 scoring paused', kind: 'err' });
-      } else if (res.error === 'match_completed') {
-        setFeedback({ side, text: 'Match already completed', kind: 'err' });
+      // New cast_vote returns success:false with a message for inactive matches.
+      if (res.success === false) {
+        setFeedback({ side, text: res.message ?? res.error ?? 'Vote rejected', kind: 'err' });
       } else if (res.committed) {
         playChime();
+        audio.playScoreCommitted();
         setFeedback(null);
-        setFlash({ side, text: `${label(action)} COMMITTED!` });
+        setFlash({ side, text: `${res.action_display ?? label(action)} COMMITTED!` });
         setTimeout(() => setFlash(null), 1500);
       } else {
-        // Counts may be absent in some result shapes; always show integers.
-        const topVotes = Number(res.top_votes ?? res.votes ?? 0);
-        const myVotes = Number(res.votes ?? 0);
-        const text =
-          res.top_action && res.top_action !== action
-            ? `${topVotes} votes for ${label(res.top_action)}, ${myVotes} for ${label(action)} \u2014 need 3 to agree`
-            : `Vote recorded \u2014 waiting for consensus (${myVotes}/4)`;
+        // Always render integers — never "undefined".
+        const topVotes = Number(res.top_votes ?? 0);
+        const totalVotes = Number(res.total_votes ?? res.votes ?? 0);
+        const threshold = Number(res.threshold ?? 3);
+        const text = res.message
+          ? `${res.message} (${topVotes}/${threshold})`
+          : `Vote recorded \u2014 waiting for consensus (${totalVotes}/4)`;
         setFeedback({ side, text, kind: 'wait' });
       }
       loadVotes();
