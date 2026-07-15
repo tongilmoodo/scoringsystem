@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
+import { formatSupabaseError } from '@/lib/loadState';
 
 export interface ActiveTournament {
   id: string;
@@ -43,6 +44,10 @@ export function useActiveTournament() {
 export function useTournamentBySlug(slug: string) {
   const [tournament, setTournament] = useState<ActiveTournament | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
   useEffect(() => {
     if (!slug) {
@@ -51,19 +56,33 @@ export function useTournamentBySlug(slug: string) {
     }
     let cancelled = false;
     setLoading(true);
+    setError(null);
 
     // Always resolve loading — on success, error, or exception — otherwise a
     // rejected query (network/RLS) leaves the TV scoreboard stuck on "Loading…".
     (async () => {
       try {
-        const { data } = await supabase
+        const { data, error: qErr } = await supabase
           .from('tournaments')
           .select('id, slug, name, courts_count, status, date, location')
           .eq('slug', slug)
           .maybeSingle();
-        if (!cancelled) setTournament((data as ActiveTournament | null) ?? null);
-      } catch {
-        if (!cancelled) setTournament(null);
+        if (cancelled) return;
+        if (qErr) {
+          // eslint-disable-next-line no-console
+          console.error('[useTournamentBySlug] query failed', qErr);
+          setError(formatSupabaseError(qErr));
+          setTournament(null);
+        } else {
+          setTournament((data as ActiveTournament | null) ?? null);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          // eslint-disable-next-line no-console
+          console.error('[useTournamentBySlug] exception', e);
+          setError(formatSupabaseError(e));
+          setTournament(null);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -72,7 +91,7 @@ export function useTournamentBySlug(slug: string) {
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, attempt]);
 
-  return { tournament, loading };
+  return { tournament, loading, error, retry, attempt };
 }

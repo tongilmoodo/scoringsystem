@@ -2,6 +2,15 @@
   "name": "mombasa-open-scoring",
   "version": "1.0.0",
   "private": true,
+  "browserslist": [
+    "chrome >= 51",
+    "safari >= 10",
+    "firefox >= 54",
+    "edge >= 15",
+    "and_chr >= 51",
+    "samsung >= 5",
+    "> 0.2% and not dead"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
