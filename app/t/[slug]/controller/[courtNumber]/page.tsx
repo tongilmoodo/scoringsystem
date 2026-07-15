@@ -209,10 +209,14 @@ export default function ControllerPage() {
   }, []);
 
   const breakActive = match?.status === 'break';
-  const breakRemaining = breakActive && match.timer_paused_at
-    ? Math.max(0, match.break_timer_seconds - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
+  // Break countdown derives from the server-persisted break_started_at so it
+  // survives reloads and is consistent across devices.
+  const breakAnchor = match?.break_started_at ?? match?.timer_paused_at ?? null;
+  const breakRemaining = breakActive && breakAnchor
+    ? Math.max(0, (match.break_timer_seconds ?? 30) - Math.floor((now - new Date(breakAnchor).getTime()) / 1000))
     : 0;
   const breakOver = match?.status === 'break' && breakRemaining === 0;
+  const totalRounds = match?.total_rounds ?? 1;
 
   const takedownActive = match?.status === 'takedown';
   const takedownRemaining = takedownActive && match.timer_paused_at
@@ -255,50 +259,42 @@ export default function ControllerPage() {
     pushLog('Timer reset');
   }
 
-  // ---- Round breaks --------------------------------------------------------
+  // ---- Round breaks (server RPCs) -----------------------------------------
   async function endRound() {
     const m = matchRef.current;
     if (!m) return;
     setRunning(false);
-    const dur = 30; // default 30s break
-    await supabase
-      .from('matches')
-      .update({
-        status: 'break',
-        timer_started_at: null,
-        timer_paused_at: new Date().toISOString(),
-        timer_seconds: remainingRef.current,
-        break_timer_seconds: dur,
-      })
-      .eq('id', m.id);
+    const { error } = await supabase.rpc('end_round', { p_match_id: m.id });
+    if (error) { pushLog(`End round failed: ${error.message}`); return; }
     playBreak();
-    pushLog(`Round ${m.current_round} ended \u2014 ${dur}s break`);
+    pushLog(`Round ${m.current_round} ended \u2014 30s break`);
+    loadMatch();
   }
 
   async function skipBreak() {
     const m = matchRef.current;
     if (!m) return;
-    await supabase.from('matches').update({ status: 'paused', timer_paused_at: new Date().toISOString() }).eq('id', m.id);
-    pushLog('Break skipped');
+    const { data, error } = await supabase.rpc('skip_break', { p_match_id: m.id });
+    if (error) { pushLog(`Skip break failed: ${error.message}`); return; }
+    const res = data as { success?: boolean; error?: string } | null;
+    if (res && res.success === false) { pushLog(res.error ?? 'Cannot skip break'); }
+    else { audio.playMatchStart(); pushLog('Break skipped \u2014 next round started'); }
+    loadMatch();
   }
 
-  // After the break expires the controller must tap Start Round (no auto-start).
+  // After the break the controller taps Start Round (no auto-start).
   async function startNextRound() {
     const m = matchRef.current;
     if (!m) return;
+    const { data, error } = await supabase.rpc('start_next_round', { p_match_id: m.id });
+    if (error) { pushLog(`Start round failed: ${error.message}`); return; }
+    const res = data as { success?: boolean; error?: string; current_round?: number } | null;
+    if (res && res.success === false) { pushLog(res.error ?? 'Cannot start next round'); loadMatch(); return; }
     setRemaining(m.max_time);
     setRunning(true);
-    await supabase
-      .from('matches')
-      .update({
-        current_round: m.current_round + 1,
-        timer_seconds: m.max_time,
-        timer_started_at: new Date().toISOString(),
-        timer_paused_at: null,
-        status: 'live',
-      })
-      .eq('id', m.id);
-    pushLog(`Round ${m.current_round + 1} started`);
+    audio.playMatchStart();
+    pushLog(`Round ${res?.current_round ?? m.current_round + 1} started`);
+    loadMatch();
   }
 
   // ---- Takedown window -----------------------------------------------------
@@ -388,22 +384,23 @@ export default function ControllerPage() {
     const m = matchRef.current;
     if (!m) return;
     setRunning(false);
-    const winnerId = winner === 'blue' ? m.blue_athlete_id : m.red_athlete_id;
-    await supabase
-      .from('matches')
-      .update({
-        status: 'completed',
-        winner_id: winnerId,
-        win_method: method,
-        timer_started_at: null,
-        timer_seconds: remainingRef.current,
-      })
-      .eq('id', m.id);
+    const { data, error } = await supabase.rpc('end_match', {
+      p_match_id: m.id,
+      p_winner_side: winner,
+      p_win_method: method,
+    });
     playFanfare();
     audio.playMatchEnd();
     setWinDialog(null);
     setDqSide(null);
     setLog([]);
+    if (error) {
+      pushLog(`End match failed: ${error.message}`);
+    } else {
+      const res = data as { auto_advanced?: boolean; message?: string } | null;
+      if (res?.auto_advanced) pushLog('Next match loading\u2026');
+      if (res?.message) pushLog(res.message);
+    }
     loadMatch();
   }
 
@@ -442,7 +439,7 @@ export default function ControllerPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between rounded-lg bg-black/30 px-4 py-2 text-sm">
         <span className="font-headline font-bold uppercase tracking-widest">Court {court === 1 ? 'A' : 'B'} &middot; Controller</span>
-        <span className="text-text-muted">{ROUND_LABELS[match.round]} &middot; Match {match.match_number} &middot; Round {match.current_round}</span>
+        <span className="text-text-muted">{ROUND_LABELS[match.round]} &middot; Match {match.match_number} &middot; Round {match.current_round} of {totalRounds}</span>
         <StatusBadge state={badgeState} />
         <ConnectionDot connected={judgesConnected} />
         <SoundToggle />
