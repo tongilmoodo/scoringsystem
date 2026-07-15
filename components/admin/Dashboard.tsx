@@ -304,7 +304,7 @@ export default function Dashboard() {
                         className={`rounded px-2 py-0.5 text-xs font-bold ${p.role === 'controller' ? 'bg-crimson/20 text-crimson' : 'bg-success/20 text-success'}`}
                         title={`${p.name ?? p.user_id} \u00b7 ${p.role ?? 'user'}`}
                       >
-                        {(p.name ?? 'User')} \u00b7 {p.role ?? 'user'}
+                        {(p.name ?? 'User')} ({p.role ?? 'user'})
                       </span>
                     ))}
                   </span>
