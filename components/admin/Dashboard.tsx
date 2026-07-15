@@ -37,6 +37,10 @@ export default function Dashboard() {
   const [judges, setJudges] = useState<JudgeUser[]>([]);
   const [now, setNow] = useState(Date.now());
 
+  // Live connection presence per court (green/grey dots). Subscribe to both
+  // possible courts unconditionally so hook order is stable across renders.
+  const presence = useCourtPresence([1, 2]);
+
   const loadTournaments = useCallback(async () => {
     const { data } = await supabase.from('tournaments').select('*').order('date', { ascending: false });
     setTournaments((data ?? []) as Tournament[]);
@@ -214,12 +218,18 @@ export default function Dashboard() {
 
   // ---- Dashboard widgets --------------------------------------------------
   const courts = Array.from({ length: tournament.courts_count }, (_, i) => i + 1);
-  const isOnline = (u: JudgeUser) => u.last_active_at && now - new Date(u.last_active_at).getTime() < ONLINE_MS;
+
+  // A judge is "online" only if they are present in the live court presence
+  // channel — a valid PIN session is not enough, the app must be open.
+  const isOnline = (u: JudgeUser) =>
+    u.court_access != null && (presence[u.court_access]?.has(u.id) ?? false);
+  const onlineCount = (court: number) =>
+    judges.filter((j) => j.court_access === court && isOnline(j)).length;
 
   // Court health: green = match live + judges online, yellow = degraded, red = offline/none.
   function courtHealth(court: number): 'green' | 'yellow' | 'red' {
     const m = courtMatches[court];
-    const online = judges.filter((j) => j.court_access === court && isOnline(j)).length;
+    const online = onlineCount(court);
     if (!m) return 'red';
     if (online >= 4) return 'green';
     if (online >= 2) return 'yellow';
@@ -228,7 +238,7 @@ export default function Dashboard() {
 
   const alerts: string[] = [];
   courts.forEach((c) => {
-    const online = judges.filter((j) => j.court_access === c && isOnline(j)).length;
+    const online = onlineCount(c);
     if (online < 4 && courtMatches[c]) alerts.push(`Court ${c === 1 ? 'A' : 'B'}: only ${online}/4 judges online`);
   });
 
@@ -287,7 +297,7 @@ export default function Dashboard() {
               <span className={`h-3.5 w-3.5 rounded-full ${healthColor[courtHealth(c)]}`} />
               <span className="text-sm">Court {c === 1 ? 'A' : 'B'}</span>
               <span className="text-sm text-text-muted">
-                {courtMatches[c] ? `${courtMatches[c]!.status} \u00b7 ${judges.filter((j) => j.court_access === c && isOnline(j)).length}/4 judges` : 'no active match'}
+                {courtMatches[c] ? `${courtMatches[c]!.status} \u00b7 ${onlineCount(c)}/4 judges` : 'no active match'}
               </span>
             </div>
           ))}
