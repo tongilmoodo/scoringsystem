@@ -24,7 +24,7 @@ export default function SingleCourtScoreboard() {
   }
 
   return (
-    <main className="h-screen w-screen overflow-hidden bg-black">
+    <main className="screen-fill overflow-hidden bg-black">
       <CourtDisplay court={court} tournamentId={tournament.id} big />
     </main>
   );

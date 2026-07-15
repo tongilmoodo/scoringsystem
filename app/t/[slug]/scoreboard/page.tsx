@@ -55,7 +55,7 @@ export default function ScoreboardPage() {
 
   const courts = Array.from({ length: tournament.courts_count }, (_, i) => i + 1);
   return (
-    <main className="flex h-screen w-screen flex-col gap-3 overflow-hidden bg-bg-dark p-3">
+    <main className="screen-fill flex flex-col gap-3 overflow-hidden bg-bg-dark p-3">
       <div className="flex items-center justify-center gap-3">
         <Logo size={28} />
         <h1 className="text-center font-headline text-lg uppercase tracking-[0.2em] text-text-muted md:text-2xl">{tournament.name}</h1>

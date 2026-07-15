@@ -98,7 +98,7 @@ export default function PublicScoreboard() {
 
   const courts = Array.from({ length: tournament.courts_count }, (_, i) => i + 1);
   return (
-    <main className="flex h-screen w-screen flex-col gap-3 overflow-hidden bg-bg-dark p-3">
+    <main className="screen-fill flex flex-col gap-3 overflow-hidden bg-bg-dark p-3">
       <div className={`grid min-h-0 flex-1 gap-3 ${courts.length > 1 ? 'md:grid-cols-2' : ''}`}>
         {courts.map((c) => (
           <CourtDisplay key={c} court={c} tournamentId={tournament.id} eventName={eventNames[c]} />
