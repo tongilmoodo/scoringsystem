@@ -20,6 +20,7 @@ DROP TYPE IF EXISTS action_type CASCADE;
 DROP TYPE IF EXISTS player_side CASCADE;
 DROP TYPE IF EXISTS tournament_status CASCADE;
 DROP TYPE IF EXISTS event_status CASCADE;
+DROP TYPE IF EXISTS bracket_status CASCADE;
 DROP TYPE IF EXISTS user_role CASCADE;
 DROP TYPE IF EXISTS vote_status CASCADE;
 DROP TYPE IF EXISTS event_category CASCADE;
@@ -31,6 +32,7 @@ DROP TYPE IF EXISTS gender_type CASCADE;
 
 CREATE TYPE tournament_status AS ENUM ('upcoming', 'live', 'completed');
 CREATE TYPE event_status AS ENUM ('upcoming', 'live', 'completed');
+CREATE TYPE bracket_status AS ENUM ('draft', 'published');
 CREATE TYPE match_round AS ENUM ('round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'third_place', 'final');
 CREATE TYPE match_status AS ENUM ('scheduled', 'assigned', 'live', 'paused', 'break', 'takedown', 'completed');
 CREATE TYPE win_method AS ENUM ('points', 'ko', 'disqualification', 'withdrawal', 'forfeit');
@@ -81,6 +83,7 @@ CREATE TABLE events (
   max_fouls INT NOT NULL DEFAULT 3,
   rounds_count INT NOT NULL DEFAULT 1,
   status event_status NOT NULL DEFAULT 'upcoming',
+  bracket_status bracket_status NOT NULL DEFAULT 'draft',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -481,9 +484,12 @@ CREATE POLICY "public_read_users" ON users FOR SELECT USING (true);
 -- ============================================================
 -- REALTIME ENABLEMENT (run after schema)
 -- ============================================================
--- ALTER PUBLICATION supabase_realtime ADD TABLE matches;
--- ALTER PUBLICATION supabase_realtime ADD TABLE judge_votes;
--- ALTER PUBLICATION supabase_realtime ADD TABLE score_events;
+ALTER PUBLICATION supabase_realtime ADD TABLE tournaments;
+ALTER PUBLICATION supabase_realtime ADD TABLE events;
+ALTER PUBLICATION supabase_realtime ADD TABLE athletes;
+ALTER PUBLICATION supabase_realtime ADD TABLE matches;
+ALTER PUBLICATION supabase_realtime ADD TABLE judge_votes;
+ALTER PUBLICATION supabase_realtime ADD TABLE score_events;
 
 -- ============================================================
 -- SEED DATA

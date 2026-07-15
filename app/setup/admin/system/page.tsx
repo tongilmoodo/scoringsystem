@@ -10,7 +10,6 @@ import {
   clearAllVotes,
   clearBroadcasts,
   emergencyStop,
-  lockAllJudges,
   resumeAll,
 } from '@/lib/adminApi';
 
@@ -56,12 +55,7 @@ export default function SystemControlPage() {
         <button onClick={async () => { await resumeAll(tid); flash('Resumed all courts'); }} className={ok}>
           Resume All
         </button>
-        <button onClick={async () => { await lockAllJudges(tid, true); flash('All judges locked'); }} className={warn}>
-          Lock All Judges
-        </button>
-        <button onClick={async () => { await lockAllJudges(tid, false); flash('All judges unlocked'); }} className={ok}>
-          Unlock All Judges
-        </button>
+
         <button onClick={async () => { await clearAllVotes(tid); flash('All pending votes cleared'); }} className={warn}>
           Clear All Votes
         </button>

@@ -80,12 +80,19 @@ export default function ControllerPage() {
 
   const loadMatch = useCallback(async () => {
     if (!tournament) return;
+    // matches has no tournament_id — resolve via events
+    const { data: evRows } = await supabase
+      .from('events')
+      .select('id')
+      .eq('tournament_id', tournament.id);
+    const evIds = (evRows ?? []).map((e: { id: string }) => e.id);
+    if (!evIds.length) { setMatch(null); return; }
     const { data } = await supabase
       .from('matches')
       .select(ATHLETE_SELECT)
-      .eq('tournament_id', tournament.id)
+      .in('event_id', evIds)
       .eq('court_number', court)
-      .in('status', ['assigned', 'live', 'paused'])
+      .in('status', ['assigned', 'live', 'paused', 'break', 'takedown'])
       .order('match_number')
       .limit(1)
       .maybeSingle();
@@ -191,14 +198,15 @@ export default function ControllerPage() {
     return () => clearInterval(t);
   }, []);
 
-  const breakActive = !!match?.break_ends_at && new Date(match.break_ends_at).getTime() > now;
-  const breakRemaining = breakActive
-    ? Math.max(0, Math.ceil((new Date(match!.break_ends_at!).getTime() - now) / 1000))
+  const breakActive = match?.status === 'break';
+  const breakRemaining = breakActive && match.timer_paused_at
+    ? Math.max(0, match.break_timer_seconds - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
     : 0;
-  const breakOver = !!match?.break_ends_at && !breakActive; // expired, awaiting Start Round
-  const takedownActive = !!match?.takedown_ends_at && new Date(match.takedown_ends_at).getTime() > now;
-  const takedownRemaining = takedownActive
-    ? Math.max(0, Math.ceil((new Date(match!.takedown_ends_at!).getTime() - now) / 1000))
+  const breakOver = match?.status === 'break' && breakRemaining === 0;
+
+  const takedownActive = match?.status === 'takedown';
+  const takedownRemaining = takedownActive && match.timer_paused_at
+    ? Math.max(0, match.takedown_timer_seconds - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
     : 0;
 
   async function startTimer() {
@@ -241,14 +249,15 @@ export default function ControllerPage() {
     const m = matchRef.current;
     if (!m) return;
     setRunning(false);
-    const dur = m.break_duration_seconds ?? 30;
+    const dur = 30; // default 30s break
     await supabase
       .from('matches')
       .update({
-        status: 'paused',
+        status: 'break',
         timer_started_at: null,
+        timer_paused_at: new Date().toISOString(),
         timer_seconds: remainingRef.current,
-        break_ends_at: new Date(Date.now() + dur * 1000).toISOString(),
+        break_timer_seconds: dur,
       })
       .eq('id', m.id);
     playBreak();
@@ -258,7 +267,7 @@ export default function ControllerPage() {
   async function skipBreak() {
     const m = matchRef.current;
     if (!m) return;
-    await supabase.from('matches').update({ break_ends_at: null }).eq('id', m.id);
+    await supabase.from('matches').update({ status: 'paused', timer_paused_at: new Date().toISOString() }).eq('id', m.id);
     pushLog('Break skipped');
   }
 
@@ -271,10 +280,10 @@ export default function ControllerPage() {
     await supabase
       .from('matches')
       .update({
-        break_ends_at: null,
         current_round: m.current_round + 1,
         timer_seconds: m.max_time,
         timer_started_at: new Date().toISOString(),
+        timer_paused_at: null,
         status: 'live',
       })
       .eq('id', m.id);
@@ -287,14 +296,19 @@ export default function ControllerPage() {
     if (!m) return;
     if (runningRef.current) {
       takedownAutoPaused.current = true;
-      await pauseTimer();
+      setRunning(false);
     } else {
       takedownAutoPaused.current = false;
     }
     takedownHandled.current = null;
     await supabase
       .from('matches')
-      .update({ takedown_ends_at: new Date(Date.now() + TAKEDOWN_SECONDS * 1000).toISOString() })
+      .update({ 
+        status: 'takedown',
+        timer_started_at: null,
+        timer_paused_at: new Date().toISOString(),
+        takedown_timer_seconds: TAKEDOWN_SECONDS
+      })
       .eq('id', m.id);
     playTakedown();
     pushLog('TAKEDOWN window started (30s)');
@@ -303,23 +317,24 @@ export default function ControllerPage() {
   async function endTakedown() {
     const m = matchRef.current;
     if (!m) return;
-    await supabase.from('matches').update({ takedown_ends_at: null }).eq('id', m.id);
-    pushLog('Takedown window ended');
     if (takedownAutoPaused.current) {
       takedownAutoPaused.current = false;
-      await startTimer(); // resume the match clock
+      await startTimer(); // resume the match clock (status becomes live)
+    } else {
+      await supabase.from('matches').update({ status: 'paused', timer_paused_at: new Date().toISOString() }).eq('id', m.id);
     }
+    pushLog('Takedown window ended');
   }
 
   // Auto-revert when the takedown timer expires.
   useEffect(() => {
-    if (!match?.takedown_ends_at) return;
-    if (takedownActive) return;
-    if (takedownHandled.current === match.takedown_ends_at) return;
-    takedownHandled.current = match.takedown_ends_at;
+    if (match?.status !== 'takedown' || !match.timer_paused_at) return;
+    if (takedownRemaining > 0) return;
+    if (takedownHandled.current === match.timer_paused_at) return;
+    takedownHandled.current = match.timer_paused_at;
     endTakedown();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [takedownActive, match?.takedown_ends_at]);
+  }, [takedownRemaining, match?.status, match?.timer_paused_at]);
 
   async function clearVotes(side: Side) {
     const m = matchRef.current;
@@ -356,12 +371,7 @@ export default function ControllerPage() {
     pushLog(`UNDO ${String(data.player_side).toUpperCase()} ${label(String(data.action_type))}`);
   }
 
-  async function toggleLock() {
-    const m = matchRef.current;
-    if (!m) return;
-    await supabase.from('matches').update({ judges_locked: !m.judges_locked }).eq('id', m.id);
-    pushLog(m.judges_locked ? 'Judges unlocked' : 'Judges locked');
-  }
+
 
   async function endMatch(winner: Side, method: (typeof WIN_METHODS)[number]) {
     const m = matchRef.current;
@@ -376,9 +386,6 @@ export default function ControllerPage() {
         win_method: method,
         timer_started_at: null,
         timer_seconds: remainingRef.current,
-        judges_locked: false,
-        break_ends_at: null,
-        takedown_ends_at: null,
       })
       .eq('id', m.id);
     playFanfare();
@@ -492,12 +499,8 @@ export default function ControllerPage() {
         <VoiceScoring onScore={(side, action) => manualCommit(side, action as ScoreActionType)} />
       </div>
 
-      {/* Bottom row */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <button onClick={undoLast} className={`${btn} bg-gray-700`}>Undo Last</button>
-        <button onClick={toggleLock} className={`${btn} ${match.judges_locked ? 'bg-yellow-600 text-black' : 'bg-gray-700'}`}>
-          {match.judges_locked ? 'Unlock Judges' : 'Lock Judges'}
-        </button>
         <button onClick={() => setWinDialog('blue')} className={`${btn} bg-blue-700`}>Blue Wins</button>
         <button onClick={() => setWinDialog('red')} className={`${btn} bg-red-700`}>Red Wins</button>
       </div>

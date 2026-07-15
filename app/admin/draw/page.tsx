@@ -14,6 +14,7 @@ interface EventRow {
   id: string;
   name: string;
   status: string | null;
+  bracket_status: 'draft' | 'published' | null;
 }
 
 export default function DrawPage() {
@@ -26,11 +27,14 @@ export default function DrawPage() {
   const [detail, setDetail] = useState<Match | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     if (!tournament) return;
     const { data: evs } = await supabase
       .from('events')
-      .select('id, name, status')
+      .select('id, name, status, bracket_status')
       .eq('tournament_id', tournament.id)
       .order('created_at');
     const evList = (evs ?? []) as EventRow[];
@@ -67,26 +71,50 @@ export default function DrawPage() {
   async function generate() {
     if (!selected) return;
     if (eventAthletes.length < 2) {
-      alert('This event needs at least 2 athletes.');
+      setError('This event needs at least 2 athletes registered before generating a draw.');
       return;
     }
     if (matches.length > 0 && !confirm('An existing bracket will be deleted and re-drawn. Continue?')) return;
     setBusy(true);
+    setError(null);
+    setSuccessMsg(null);
     try {
       const { lots, rounds } = generateBracket(selected, eventAthletes);
-      await supabase.from('matches').delete().eq('event_id', selected);
+
+      // 1. Delete existing matches
+      const { error: delErr } = await supabase.from('matches').delete().eq('event_id', selected);
+      if (delErr) throw new Error(`Delete failed: ${delErr.message} (code: ${delErr.code})`);
+
+      // 2. Update lot numbers
       for (const lot of lots) {
-        await supabase.from('athletes').update({ lot_number: lot.lot_number }).eq('id', lot.id);
+        const { error: lotErr } = await supabase.from('athletes').update({ lot_number: lot.lot_number }).eq('id', lot.id);
+        if (lotErr) throw new Error(`Lot assignment failed: ${lotErr.message}`);
       }
-      // Insert later rounds first so next_match_id foreign keys resolve.
+
+      // 3. Insert later rounds first so next_match_id foreign keys resolve.
+      let totalInserted = 0;
       for (let r = rounds.length - 1; r >= 0; r--) {
-        const { error } = await supabase.from('matches').insert(rounds[r]);
-        if (error) throw error;
+        const { data: inserted, error: insErr } = await supabase
+          .from('matches')
+          .insert(rounds[r])
+          .select('id');
+        if (insErr) {
+          throw new Error(
+            `Insert failed for round ${r + 1} (${rounds[r][0]?.round}): ${insErr.message} (code: ${insErr.code}, details: ${insErr.details ?? 'none'})`
+          );
+        }
+        totalInserted += (inserted ?? []).length;
       }
+
       await Promise.all([load(), loadMatches()]);
       setDetail(null);
-    } catch {
-      alert('Draw generation failed. Check the console / Supabase logs.');
+      setSuccessMsg(
+        `✓ ${totalInserted} match${totalInserted !== 1 ? 'es' : ''} created for "${currentEvent?.name ?? selected}"`
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Draw generation failed: ${msg}`);
+      console.error('[generate draw]', err);
     } finally {
       setBusy(false);
     }
@@ -94,9 +122,20 @@ export default function DrawPage() {
 
   async function publish() {
     if (!selected) return;
-    await supabase.from('events').update({ status: 'live' }).eq('id', selected);
-    load();
+    setError(null);
+    setSuccessMsg(null);
+    const { error: pubErr } = await supabase
+      .from('events')
+      .update({ bracket_status: 'published' })
+      .eq('id', selected);
+    if (pubErr) {
+      setError(`Publish failed: ${pubErr.message} (code: ${pubErr.code})`);
+    } else {
+      setSuccessMsg(`✓ Bracket for "${currentEvent?.name}" is now published and visible to the public.`);
+      load();
+    }
   }
+
 
   if (!ready || !tournamentReady) return null;
   if (!user) return <PinPad title="Admin Login" onSubmit={(pin) => login(pin)} />;
@@ -125,11 +164,28 @@ export default function DrawPage() {
         <Link href="/admin" className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-bold">← Dashboard</Link>
       </div>
 
+      {/* Error banner */}
+      {error && (
+        <div className="rounded-xl border border-red-700 bg-red-950 p-4 text-red-300">
+          <p className="font-bold text-red-400">Error</p>
+          <p className="mt-1 font-mono text-sm">{error}</p>
+          <button onClick={() => setError(null)} className="mt-2 text-xs text-red-400 underline">Dismiss</button>
+        </div>
+      )}
+
+      {/* Success banner */}
+      {successMsg && (
+        <div className="rounded-xl border border-green-700 bg-green-950 p-4 text-green-300">
+          <p className="font-mono text-sm">{successMsg}</p>
+          <button onClick={() => setSuccessMsg(null)} className="mt-1 text-xs text-green-400 underline">Dismiss</button>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-800 bg-gray-900 p-4">
         <select
           className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2"
           value={selected}
-          onChange={(e) => setSelected(e.target.value)}
+          onChange={(e) => { setSelected(e.target.value); setError(null); setSuccessMsg(null); }}
         >
           <option value="">Select event…</option>
           {events.map((ev) => (
@@ -144,7 +200,7 @@ export default function DrawPage() {
             </button>
             {matches.length > 0 && (
               <button onClick={publish} className="rounded-lg bg-blue-700 px-4 py-2 font-bold">
-                {currentEvent?.status === 'live' ? 'Published ✓' : 'Publish Bracket'}
+                {currentEvent?.bracket_status === 'published' ? 'Published ✓' : 'Publish Bracket'}
               </button>
             )}
           </>

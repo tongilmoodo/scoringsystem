@@ -25,6 +25,7 @@ export default function PublicBracketPage() {
       .from('events')
       .select('id, name')
       .eq('tournament_id', tournament.id)
+      .eq('bracket_status', 'published')
       .order('created_at')
       .then(({ data }) => {
         const evs = (data ?? []) as EventRow[];

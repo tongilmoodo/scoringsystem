@@ -15,11 +15,20 @@ export interface DrawMatchRow {
   court_number: number | null;
   round: Round;
   match_number: number;
+  current_round: number;
   blue_athlete_id: string | null;
   red_athlete_id: string | null;
+  blue_score: number;
+  red_score: number;
+  blue_fouls: number;
+  red_fouls: number;
   status: 'scheduled' | 'completed';
   winner_id: string | null;
   win_method: 'withdrawal' | null;
+  timer_seconds: number;
+  max_time: number;
+  break_timer_seconds: number;
+  takedown_timer_seconds: number;
   next_match_id: string | null;
   next_match_position: Side | null;
 }
@@ -76,11 +85,20 @@ export function generateBracket(eventId: string, athletes: Athlete[]) {
       court_number: null,
       round,
       match_number: 0,
+      current_round: 1,
       blue_athlete_id: null,
       red_athlete_id: null,
+      blue_score: 0,
+      red_score: 0,
+      blue_fouls: 0,
+      red_fouls: 0,
       status: 'scheduled' as const,
       winner_id: null,
       win_method: null,
+      timer_seconds: 180,
+      max_time: 180,
+      break_timer_seconds: 30,
+      takedown_timer_seconds: 30,
       next_match_id: null,
       next_match_position: null,
     }))

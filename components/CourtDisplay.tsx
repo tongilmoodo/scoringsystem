@@ -37,12 +37,19 @@ export default function CourtDisplay({
   const prevScores = useRef<{ blue: number; red: number } | null>(null);
 
   const load = useCallback(async () => {
+    // matches has no tournament_id column — join through events
+    const { data: evRows } = await supabase
+      .from('events')
+      .select('id')
+      .eq('tournament_id', tournamentId);
+    const evIds = (evRows ?? []).map((e: { id: string }) => e.id);
+    if (!evIds.length) { setMatch(null); return; }
     const { data } = await supabase
       .from('matches')
       .select(ATHLETE_SELECT)
-      .eq('tournament_id', tournamentId)
+      .in('event_id', evIds)
       .eq('court_number', court)
-      .in('status', ['assigned', 'live', 'paused', 'completed'])
+      .in('status', ['assigned', 'live', 'paused', 'break', 'takedown', 'completed'])
       .order('match_number')
       .limit(1)
       .maybeSingle();
@@ -55,7 +62,7 @@ export default function CourtDisplay({
       .channel(`sb:t:${tournamentId}:court:${court}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'matches', filter: `tournament_id=eq.${tournamentId}` },
+        { event: '*', schema: 'public', table: 'matches' },
         () => load()
       )
       .subscribe();
@@ -98,9 +105,11 @@ export default function CourtDisplay({
     );
   }
 
-  const breakActive = !!match.break_ends_at && new Date(match.break_ends_at).getTime() > now;
-  const breakRemaining = breakActive ? Math.max(0, Math.ceil((new Date(match.break_ends_at!).getTime() - now) / 1000)) : 0;
-  const takedownActive = !!match.takedown_ends_at && new Date(match.takedown_ends_at).getTime() > now;
+  const breakActive = match.status === 'break';
+  const breakRemaining = breakActive && match.timer_paused_at
+    ? Math.max(0, match.break_timer_seconds - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
+    : 0;
+  const takedownActive = match.status === 'takedown';
   const completed = match.status === 'completed';
   const winnerSide: Side | null = completed
     ? match.winner_id === match.blue_athlete_id

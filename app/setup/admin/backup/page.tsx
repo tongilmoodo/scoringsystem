@@ -20,19 +20,25 @@ export default function BackupPage() {
   async function snapshot() {
     if (!tournament) return;
     setBusy(true);
-    const [t, events, athletes, matches, scores] = await Promise.all([
+    // matches has no tournament_id — get event IDs first
+    const evRes = await supabase.from('events').select('*').eq('tournament_id', tournament.id);
+    const eventIds = (evRes.data ?? []).map((e: { id: string }) => e.id);
+    const [t, athletes, matchRes, scores] = await Promise.all([
       supabase.from('tournaments').select('*').eq('id', tournament.id).single(),
-      supabase.from('events').select('*').eq('tournament_id', tournament.id),
       supabase.from('athletes').select('*'),
-      supabase.from('matches').select('*').eq('tournament_id', tournament.id),
-      supabase.from('score_events').select('*, match:matches!inner(tournament_id)').eq('match.tournament_id', tournament.id),
+      eventIds.length
+        ? supabase.from('matches').select('*').in('event_id', eventIds)
+        : Promise.resolve({ data: [] }),
+      eventIds.length
+        ? supabase.from('score_events').select('*, match:matches!inner(event_id)').in('match.event_id', eventIds)
+        : Promise.resolve({ data: [] }),
     ]);
     const dump = {
       exported_at: new Date().toISOString(),
       tournament: t.data,
-      events: events.data,
+      events: evRes.data,
       athletes: athletes.data,
-      matches: matches.data,
+      matches: matchRes.data,
       score_events: scores.data,
     };
     const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });

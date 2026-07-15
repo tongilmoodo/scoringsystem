@@ -16,19 +16,27 @@ export default function ScoreboardPage() {
   useEffect(() => {
     if (!tournament) return;
     supabase
-      .from('matches')
-      .select('court_number, events(name)')
+      .from('events')
+      .select('id')
       .eq('tournament_id', tournament.id)
-      .in('status', ['assigned', 'live', 'paused'])
-      .then(({ data }) => {
-        const map: Record<number, string> = {};
-        (data ?? []).forEach((m: any) => {
-          if (m.court_number) {
-            const ev = Array.isArray(m.events) ? m.events[0] : m.events;
-            map[m.court_number] = ev?.name ?? '';
-          }
-        });
-        setEventNames(map);
+      .then(({ data: evRows }) => {
+        const evIds = (evRows ?? []).map((e: { id: string }) => e.id);
+        if (!evIds.length) return;
+        supabase
+          .from('matches')
+          .select('court_number, events(name)')
+          .in('event_id', evIds)
+          .in('status', ['assigned', 'live', 'paused', 'break', 'takedown'])
+          .then(({ data }) => {
+            const map: Record<number, string> = {};
+            (data ?? []).forEach((m: any) => {
+              if (m.court_number) {
+                const ev = Array.isArray(m.events) ? m.events[0] : m.events;
+                map[m.court_number] = ev?.name ?? '';
+              }
+            });
+            setEventNames(map);
+          });
       });
   }, [tournament?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -1,0 +1,2979 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "",
+        "title": "standard public schema",
+        "version": "14.5"
+    },
+    "host": "ubimufivbrkzlonpfqaq.supabase.co:443",
+    "basePath": "/",
+    "schemes": [
+        "https"
+    ],
+    "consumes": [
+        "application/json",
+        "application/vnd.pgrst.object+json;nulls=stripped",
+        "application/vnd.pgrst.object+json",
+        "text/csv"
+    ],
+    "produces": [
+        "application/json",
+        "application/vnd.pgrst.object+json;nulls=stripped",
+        "application/vnd.pgrst.object+json",
+        "text/csv"
+    ],
+    "paths": {
+        "/": {
+            "get": {
+                "produces": [
+                    "application/openapi+json",
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "summary": "OpenAPI description (this document)",
+                "tags": [
+                    "Introspection"
+                ]
+            }
+        },
+        "/users": {
+            "get": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.users.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.tournament_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.name"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.pin_hash"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.role"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.court_access"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.is_active"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/order"
+                    },
+                    {
+                        "$ref": "#/parameters/range"
+                    },
+                    {
+                        "$ref": "#/parameters/rangeUnit"
+                    },
+                    {
+                        "$ref": "#/parameters/offset"
+                    },
+                    {
+                        "$ref": "#/parameters/limit"
+                    },
+                    {
+                        "$ref": "#/parameters/preferCount"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/users"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "206": {
+                        "description": "Partial Content"
+                    }
+                },
+                "tags": [
+                    "users"
+                ]
+            },
+            "post": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/body.users"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/preferPost"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                },
+                "tags": [
+                    "users"
+                ]
+            },
+            "delete": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.users.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.tournament_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.name"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.pin_hash"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.role"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.court_access"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.is_active"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "users"
+                ]
+            },
+            "patch": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.users.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.tournament_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.name"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.pin_hash"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.role"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.court_access"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.is_active"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.users.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/body.users"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "users"
+                ]
+            }
+        },
+        "/athletes": {
+            "get": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.event_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.name"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.team"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.country_code"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.photo_url"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.seed"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.lot_number"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/order"
+                    },
+                    {
+                        "$ref": "#/parameters/range"
+                    },
+                    {
+                        "$ref": "#/parameters/rangeUnit"
+                    },
+                    {
+                        "$ref": "#/parameters/offset"
+                    },
+                    {
+                        "$ref": "#/parameters/limit"
+                    },
+                    {
+                        "$ref": "#/parameters/preferCount"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/athletes"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "206": {
+                        "description": "Partial Content"
+                    }
+                },
+                "tags": [
+                    "athletes"
+                ]
+            },
+            "post": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/body.athletes"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/preferPost"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                },
+                "tags": [
+                    "athletes"
+                ]
+            },
+            "delete": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.event_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.name"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.team"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.country_code"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.photo_url"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.seed"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.lot_number"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "athletes"
+                ]
+            },
+            "patch": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.event_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.name"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.team"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.country_code"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.photo_url"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.seed"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.lot_number"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.athletes.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/body.athletes"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "athletes"
+                ]
+            }
+        },
+        "/judge_votes": {
+            "get": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.match_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.judge_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.player_side"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.action_type"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.points"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.status"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/order"
+                    },
+                    {
+                        "$ref": "#/parameters/range"
+                    },
+                    {
+                        "$ref": "#/parameters/rangeUnit"
+                    },
+                    {
+                        "$ref": "#/parameters/offset"
+                    },
+                    {
+                        "$ref": "#/parameters/limit"
+                    },
+                    {
+                        "$ref": "#/parameters/preferCount"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/judge_votes"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "206": {
+                        "description": "Partial Content"
+                    }
+                },
+                "tags": [
+                    "judge_votes"
+                ]
+            },
+            "post": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/body.judge_votes"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/preferPost"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                },
+                "tags": [
+                    "judge_votes"
+                ]
+            },
+            "delete": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.match_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.judge_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.player_side"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.action_type"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.points"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.status"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "judge_votes"
+                ]
+            },
+            "patch": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.match_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.judge_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.player_side"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.action_type"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.points"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.status"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.judge_votes.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/body.judge_votes"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "judge_votes"
+                ]
+            }
+        },
+        "/matches": {
+            "get": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.event_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.court_number"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.round"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.match_number"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.current_round"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.blue_athlete_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.red_athlete_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.blue_score"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.red_score"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.blue_fouls"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.red_fouls"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.status"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.winner_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.win_method"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.timer_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.max_time"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.break_timer_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.takedown_timer_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.timer_started_at"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.timer_paused_at"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.next_match_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.next_match_position"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/order"
+                    },
+                    {
+                        "$ref": "#/parameters/range"
+                    },
+                    {
+                        "$ref": "#/parameters/rangeUnit"
+                    },
+                    {
+                        "$ref": "#/parameters/offset"
+                    },
+                    {
+                        "$ref": "#/parameters/limit"
+                    },
+                    {
+                        "$ref": "#/parameters/preferCount"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/matches"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "206": {
+                        "description": "Partial Content"
+                    }
+                },
+                "tags": [
+                    "matches"
+                ]
+            },
+            "post": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/body.matches"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/preferPost"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                },
+                "tags": [
+                    "matches"
+                ]
+            },
+            "delete": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.event_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.court_number"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.round"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.match_number"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.current_round"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.blue_athlete_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.red_athlete_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.blue_score"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.red_score"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.blue_fouls"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.red_fouls"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.status"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.winner_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.win_method"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.timer_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.max_time"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.break_timer_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.takedown_timer_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.timer_started_at"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.timer_paused_at"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.next_match_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.next_match_position"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "matches"
+                ]
+            },
+            "patch": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.event_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.court_number"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.round"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.match_number"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.current_round"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.blue_athlete_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.red_athlete_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.blue_score"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.red_score"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.blue_fouls"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.red_fouls"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.status"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.winner_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.win_method"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.timer_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.max_time"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.break_timer_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.takedown_timer_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.timer_started_at"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.timer_paused_at"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.next_match_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.next_match_position"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.matches.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/body.matches"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "matches"
+                ]
+            }
+        },
+        "/events": {
+            "get": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.events.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.tournament_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.name"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.category"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.gender"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.age_group"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.weight_class"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.match_duration_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.break_duration_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.max_fouls"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.rounds_count"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.status"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/order"
+                    },
+                    {
+                        "$ref": "#/parameters/range"
+                    },
+                    {
+                        "$ref": "#/parameters/rangeUnit"
+                    },
+                    {
+                        "$ref": "#/parameters/offset"
+                    },
+                    {
+                        "$ref": "#/parameters/limit"
+                    },
+                    {
+                        "$ref": "#/parameters/preferCount"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/events"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "206": {
+                        "description": "Partial Content"
+                    }
+                },
+                "tags": [
+                    "events"
+                ]
+            },
+            "post": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/body.events"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/preferPost"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                },
+                "tags": [
+                    "events"
+                ]
+            },
+            "delete": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.events.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.tournament_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.name"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.category"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.gender"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.age_group"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.weight_class"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.match_duration_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.break_duration_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.max_fouls"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.rounds_count"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.status"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "events"
+                ]
+            },
+            "patch": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.events.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.tournament_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.name"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.category"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.gender"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.age_group"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.weight_class"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.match_duration_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.break_duration_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.max_fouls"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.rounds_count"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.status"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.events.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/body.events"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "events"
+                ]
+            }
+        },
+        "/score_events": {
+            "get": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.match_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.athlete_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.player_side"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.action_type"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.points"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.match_time_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.takedown"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.scored_by"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/order"
+                    },
+                    {
+                        "$ref": "#/parameters/range"
+                    },
+                    {
+                        "$ref": "#/parameters/rangeUnit"
+                    },
+                    {
+                        "$ref": "#/parameters/offset"
+                    },
+                    {
+                        "$ref": "#/parameters/limit"
+                    },
+                    {
+                        "$ref": "#/parameters/preferCount"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/score_events"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "206": {
+                        "description": "Partial Content"
+                    }
+                },
+                "tags": [
+                    "score_events"
+                ]
+            },
+            "post": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/body.score_events"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/preferPost"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                },
+                "tags": [
+                    "score_events"
+                ]
+            },
+            "delete": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.match_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.athlete_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.player_side"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.action_type"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.points"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.match_time_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.takedown"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.scored_by"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "score_events"
+                ]
+            },
+            "patch": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.match_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.athlete_id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.player_side"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.action_type"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.points"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.match_time_seconds"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.takedown"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.scored_by"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.score_events.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/body.score_events"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "score_events"
+                ]
+            }
+        },
+        "/tournaments": {
+            "get": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.slug"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.name"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.location"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.date"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.status"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.logo_url"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.courts_count"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/order"
+                    },
+                    {
+                        "$ref": "#/parameters/range"
+                    },
+                    {
+                        "$ref": "#/parameters/rangeUnit"
+                    },
+                    {
+                        "$ref": "#/parameters/offset"
+                    },
+                    {
+                        "$ref": "#/parameters/limit"
+                    },
+                    {
+                        "$ref": "#/parameters/preferCount"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/tournaments"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "206": {
+                        "description": "Partial Content"
+                    }
+                },
+                "tags": [
+                    "tournaments"
+                ]
+            },
+            "post": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/body.tournaments"
+                    },
+                    {
+                        "$ref": "#/parameters/select"
+                    },
+                    {
+                        "$ref": "#/parameters/preferPost"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                },
+                "tags": [
+                    "tournaments"
+                ]
+            },
+            "delete": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.slug"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.name"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.location"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.date"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.status"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.logo_url"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.courts_count"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "tournaments"
+                ]
+            },
+            "patch": {
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.id"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.slug"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.name"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.location"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.date"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.status"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.logo_url"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.courts_count"
+                    },
+                    {
+                        "$ref": "#/parameters/rowFilter.tournaments.created_at"
+                    },
+                    {
+                        "$ref": "#/parameters/body.tournaments"
+                    },
+                    {
+                        "$ref": "#/parameters/preferReturn"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "tags": [
+                    "tournaments"
+                ]
+            }
+        },
+        "/rpc/manual_commit_score": {
+            "post": {
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "args",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "p_action_type": {
+                                    "format": "public.action_type",
+                                    "type": "string"
+                                },
+                                "p_controller_name": {
+                                    "format": "text",
+                                    "type": "string"
+                                },
+                                "p_match_id": {
+                                    "format": "uuid",
+                                    "type": "string"
+                                },
+                                "p_player_side": {
+                                    "format": "public.player_side",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "p_match_id",
+                                "p_player_side",
+                                "p_action_type",
+                                "p_controller_name"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    {
+                        "$ref": "#/parameters/preferParams"
+                    }
+                ],
+                "produces": [
+                    "application/json",
+                    "application/vnd.pgrst.object+json;nulls=stripped",
+                    "application/vnd.pgrst.object+json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "(rpc) manual_commit_score"
+                ]
+            }
+        },
+        "/rpc/can_control_court": {
+            "post": {
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "args",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "court": {
+                                    "format": "integer",
+                                    "type": "integer"
+                                }
+                            },
+                            "required": [
+                                "court"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    {
+                        "$ref": "#/parameters/preferParams"
+                    }
+                ],
+                "produces": [
+                    "application/json",
+                    "application/vnd.pgrst.object+json;nulls=stripped",
+                    "application/vnd.pgrst.object+json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "(rpc) can_control_court"
+                ]
+            }
+        },
+        "/rpc/rls_auto_enable": {
+            "post": {
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "args",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    {
+                        "$ref": "#/parameters/preferParams"
+                    }
+                ],
+                "produces": [
+                    "application/json",
+                    "application/vnd.pgrst.object+json;nulls=stripped",
+                    "application/vnd.pgrst.object+json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "(rpc) rls_auto_enable"
+                ]
+            }
+        },
+        "/rpc/cast_vote": {
+            "post": {
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "args",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "p_action_type": {
+                                    "format": "public.action_type",
+                                    "type": "string"
+                                },
+                                "p_judge_id": {
+                                    "format": "uuid",
+                                    "type": "string"
+                                },
+                                "p_match_id": {
+                                    "format": "uuid",
+                                    "type": "string"
+                                },
+                                "p_player_side": {
+                                    "format": "public.player_side",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "p_match_id",
+                                "p_judge_id",
+                                "p_player_side",
+                                "p_action_type"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    {
+                        "$ref": "#/parameters/preferParams"
+                    }
+                ],
+                "produces": [
+                    "application/json",
+                    "application/vnd.pgrst.object+json;nulls=stripped",
+                    "application/vnd.pgrst.object+json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "(rpc) cast_vote"
+                ]
+            }
+        },
+        "/rpc/clear_votes": {
+            "post": {
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "args",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "p_match_id": {
+                                    "format": "uuid",
+                                    "type": "string"
+                                },
+                                "p_player_side": {
+                                    "format": "public.player_side",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "p_match_id",
+                                "p_player_side"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    {
+                        "$ref": "#/parameters/preferParams"
+                    }
+                ],
+                "produces": [
+                    "application/json",
+                    "application/vnd.pgrst.object+json;nulls=stripped",
+                    "application/vnd.pgrst.object+json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "(rpc) clear_votes"
+                ]
+            }
+        },
+        "/rpc/can_score_court": {
+            "post": {
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "args",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "court": {
+                                    "format": "integer",
+                                    "type": "integer"
+                                }
+                            },
+                            "required": [
+                                "court"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    {
+                        "$ref": "#/parameters/preferParams"
+                    }
+                ],
+                "produces": [
+                    "application/json",
+                    "application/vnd.pgrst.object+json;nulls=stripped",
+                    "application/vnd.pgrst.object+json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "(rpc) can_score_court"
+                ]
+            }
+        },
+        "/rpc/is_admin": {
+            "post": {
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "args",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    {
+                        "$ref": "#/parameters/preferParams"
+                    }
+                ],
+                "produces": [
+                    "application/json",
+                    "application/vnd.pgrst.object+json;nulls=stripped",
+                    "application/vnd.pgrst.object+json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "(rpc) is_admin"
+                ]
+            }
+        }
+    },
+    "definitions": {
+        "users": {
+            "required": [
+                "id",
+                "name",
+                "pin_hash",
+                "role",
+                "is_active",
+                "created_at"
+            ],
+            "properties": {
+                "id": {
+                    "default": "gen_random_uuid()",
+                    "description": "Note:\nThis is a Primary Key.<pk/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "tournament_id": {
+                    "description": "Note:\nThis is a Foreign Key to `tournaments.id`.<fk table='tournaments' column='id'/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "name": {
+                    "format": "text",
+                    "type": "string"
+                },
+                "pin_hash": {
+                    "format": "text",
+                    "type": "string"
+                },
+                "role": {
+                    "default": "judge",
+                    "enum": [
+                        "admin",
+                        "controller",
+                        "judge"
+                    ],
+                    "format": "public.user_role",
+                    "type": "string"
+                },
+                "court_access": {
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "default": true,
+                    "format": "boolean",
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "default": "now()",
+                    "format": "timestamp with time zone",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "athletes": {
+            "required": [
+                "id",
+                "event_id",
+                "name",
+                "team",
+                "country_code",
+                "created_at"
+            ],
+            "properties": {
+                "id": {
+                    "default": "gen_random_uuid()",
+                    "description": "Note:\nThis is a Primary Key.<pk/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "event_id": {
+                    "description": "Note:\nThis is a Foreign Key to `events.id`.<fk table='events' column='id'/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "name": {
+                    "format": "text",
+                    "type": "string"
+                },
+                "team": {
+                    "format": "text",
+                    "type": "string"
+                },
+                "country_code": {
+                    "format": "character",
+                    "maxLength": 2,
+                    "type": "string"
+                },
+                "photo_url": {
+                    "format": "text",
+                    "type": "string"
+                },
+                "seed": {
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "lot_number": {
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "default": "now()",
+                    "format": "timestamp with time zone",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "judge_votes": {
+            "required": [
+                "id",
+                "match_id",
+                "judge_id",
+                "player_side",
+                "action_type",
+                "points",
+                "status",
+                "created_at"
+            ],
+            "properties": {
+                "id": {
+                    "default": "gen_random_uuid()",
+                    "description": "Note:\nThis is a Primary Key.<pk/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "match_id": {
+                    "description": "Note:\nThis is a Foreign Key to `matches.id`.<fk table='matches' column='id'/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "judge_id": {
+                    "description": "Note:\nThis is a Foreign Key to `users.id`.<fk table='users' column='id'/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "player_side": {
+                    "enum": [
+                        "blue",
+                        "red"
+                    ],
+                    "format": "public.player_side",
+                    "type": "string"
+                },
+                "action_type": {
+                    "enum": [
+                        "point_1",
+                        "point_2",
+                        "point_3",
+                        "foul",
+                        "win_blue",
+                        "win_red"
+                    ],
+                    "format": "public.action_type",
+                    "type": "string"
+                },
+                "points": {
+                    "default": 0,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "status": {
+                    "default": "pending",
+                    "enum": [
+                        "pending",
+                        "committed",
+                        "cleared"
+                    ],
+                    "format": "public.vote_status",
+                    "type": "string"
+                },
+                "created_at": {
+                    "default": "now()",
+                    "format": "timestamp with time zone",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "matches": {
+            "required": [
+                "id",
+                "event_id",
+                "round",
+                "match_number",
+                "current_round",
+                "blue_score",
+                "red_score",
+                "blue_fouls",
+                "red_fouls",
+                "status",
+                "timer_seconds",
+                "max_time",
+                "break_timer_seconds",
+                "takedown_timer_seconds",
+                "created_at"
+            ],
+            "properties": {
+                "id": {
+                    "default": "gen_random_uuid()",
+                    "description": "Note:\nThis is a Primary Key.<pk/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "event_id": {
+                    "description": "Note:\nThis is a Foreign Key to `events.id`.<fk table='events' column='id'/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "court_number": {
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "round": {
+                    "enum": [
+                        "round_of_32",
+                        "round_of_16",
+                        "quarter_final",
+                        "semi_final",
+                        "third_place",
+                        "final"
+                    ],
+                    "format": "public.match_round",
+                    "type": "string"
+                },
+                "match_number": {
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "current_round": {
+                    "default": 1,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "blue_athlete_id": {
+                    "description": "Note:\nThis is a Foreign Key to `athletes.id`.<fk table='athletes' column='id'/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "red_athlete_id": {
+                    "description": "Note:\nThis is a Foreign Key to `athletes.id`.<fk table='athletes' column='id'/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "blue_score": {
+                    "default": 0,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "red_score": {
+                    "default": 0,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "blue_fouls": {
+                    "default": 0,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "red_fouls": {
+                    "default": 0,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "status": {
+                    "default": "scheduled",
+                    "enum": [
+                        "scheduled",
+                        "assigned",
+                        "live",
+                        "paused",
+                        "break",
+                        "takedown",
+                        "completed"
+                    ],
+                    "format": "public.match_status",
+                    "type": "string"
+                },
+                "winner_id": {
+                    "description": "Note:\nThis is a Foreign Key to `athletes.id`.<fk table='athletes' column='id'/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "win_method": {
+                    "enum": [
+                        "points",
+                        "ko",
+                        "disqualification",
+                        "withdrawal",
+                        "forfeit"
+                    ],
+                    "format": "public.win_method",
+                    "type": "string"
+                },
+                "timer_seconds": {
+                    "default": 180,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "max_time": {
+                    "default": 180,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "break_timer_seconds": {
+                    "default": 30,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "takedown_timer_seconds": {
+                    "default": 30,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "timer_started_at": {
+                    "format": "timestamp with time zone",
+                    "type": "string"
+                },
+                "timer_paused_at": {
+                    "format": "timestamp with time zone",
+                    "type": "string"
+                },
+                "next_match_id": {
+                    "description": "Note:\nThis is a Foreign Key to `matches.id`.<fk table='matches' column='id'/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "next_match_position": {
+                    "enum": [
+                        "blue",
+                        "red"
+                    ],
+                    "format": "public.player_side",
+                    "type": "string"
+                },
+                "created_at": {
+                    "default": "now()",
+                    "format": "timestamp with time zone",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "events": {
+            "required": [
+                "id",
+                "tournament_id",
+                "name",
+                "category",
+                "gender",
+                "age_group",
+                "match_duration_seconds",
+                "break_duration_seconds",
+                "max_fouls",
+                "rounds_count",
+                "status",
+                "created_at"
+            ],
+            "properties": {
+                "id": {
+                    "default": "gen_random_uuid()",
+                    "description": "Note:\nThis is a Primary Key.<pk/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "tournament_id": {
+                    "description": "Note:\nThis is a Foreign Key to `tournaments.id`.<fk table='tournaments' column='id'/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "name": {
+                    "format": "text",
+                    "type": "string"
+                },
+                "category": {
+                    "enum": [
+                        "form_bon_kata",
+                        "sparring_kumite",
+                        "special_techniques",
+                        "two_or_three_categories",
+                        "team_form_bon_kata",
+                        "team_special_techniques",
+                        "team_two_categories",
+                        "team_sparring_5_person"
+                    ],
+                    "format": "public.event_category",
+                    "type": "string"
+                },
+                "gender": {
+                    "enum": [
+                        "male",
+                        "female",
+                        "mixed"
+                    ],
+                    "format": "public.gender_type",
+                    "type": "string"
+                },
+                "age_group": {
+                    "format": "text",
+                    "type": "string"
+                },
+                "weight_class": {
+                    "format": "text",
+                    "type": "string"
+                },
+                "match_duration_seconds": {
+                    "default": 180,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "break_duration_seconds": {
+                    "default": 30,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "max_fouls": {
+                    "default": 3,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "rounds_count": {
+                    "default": 1,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "status": {
+                    "default": "upcoming",
+                    "enum": [
+                        "upcoming",
+                        "live",
+                        "completed"
+                    ],
+                    "format": "public.event_status",
+                    "type": "string"
+                },
+                "created_at": {
+                    "default": "now()",
+                    "format": "timestamp with time zone",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "score_events": {
+            "required": [
+                "id",
+                "match_id",
+                "player_side",
+                "action_type",
+                "points",
+                "takedown",
+                "created_at"
+            ],
+            "properties": {
+                "id": {
+                    "default": "gen_random_uuid()",
+                    "description": "Note:\nThis is a Primary Key.<pk/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "match_id": {
+                    "description": "Note:\nThis is a Foreign Key to `matches.id`.<fk table='matches' column='id'/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "athlete_id": {
+                    "description": "Note:\nThis is a Foreign Key to `athletes.id`.<fk table='athletes' column='id'/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "player_side": {
+                    "enum": [
+                        "blue",
+                        "red"
+                    ],
+                    "format": "public.player_side",
+                    "type": "string"
+                },
+                "action_type": {
+                    "enum": [
+                        "point_1",
+                        "point_2",
+                        "point_3",
+                        "foul",
+                        "win_blue",
+                        "win_red"
+                    ],
+                    "format": "public.action_type",
+                    "type": "string"
+                },
+                "points": {
+                    "default": 0,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "match_time_seconds": {
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "takedown": {
+                    "default": false,
+                    "format": "boolean",
+                    "type": "boolean"
+                },
+                "scored_by": {
+                    "format": "text",
+                    "type": "string"
+                },
+                "created_at": {
+                    "default": "now()",
+                    "format": "timestamp with time zone",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "tournaments": {
+            "required": [
+                "id",
+                "slug",
+                "name",
+                "location",
+                "date",
+                "status",
+                "courts_count",
+                "created_at"
+            ],
+            "properties": {
+                "id": {
+                    "default": "gen_random_uuid()",
+                    "description": "Note:\nThis is a Primary Key.<pk/>",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "slug": {
+                    "format": "text",
+                    "type": "string"
+                },
+                "name": {
+                    "format": "text",
+                    "type": "string"
+                },
+                "location": {
+                    "default": "Mombasa, Kenya",
+                    "format": "text",
+                    "type": "string"
+                },
+                "date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "status": {
+                    "default": "upcoming",
+                    "enum": [
+                        "upcoming",
+                        "live",
+                        "completed"
+                    ],
+                    "format": "public.tournament_status",
+                    "type": "string"
+                },
+                "logo_url": {
+                    "format": "text",
+                    "type": "string"
+                },
+                "courts_count": {
+                    "default": 2,
+                    "format": "integer",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "default": "now()",
+                    "format": "timestamp with time zone",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "parameters": {
+        "preferParams": {
+            "name": "Prefer",
+            "description": "Preference",
+            "required": false,
+            "in": "header",
+            "type": "string"
+        },
+        "preferReturn": {
+            "name": "Prefer",
+            "description": "Preference",
+            "required": false,
+            "enum": [
+                "return=representation",
+                "return=minimal",
+                "return=none"
+            ],
+            "in": "header",
+            "type": "string"
+        },
+        "preferCount": {
+            "name": "Prefer",
+            "description": "Preference",
+            "required": false,
+            "enum": [
+                "count=none"
+            ],
+            "in": "header",
+            "type": "string"
+        },
+        "preferPost": {
+            "name": "Prefer",
+            "description": "Preference",
+            "required": false,
+            "enum": [
+                "return=representation",
+                "return=minimal",
+                "return=none",
+                "resolution=ignore-duplicates",
+                "resolution=merge-duplicates"
+            ],
+            "in": "header",
+            "type": "string"
+        },
+        "select": {
+            "name": "select",
+            "description": "Filtering Columns",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "on_conflict": {
+            "name": "on_conflict",
+            "description": "On Conflict",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "order": {
+            "name": "order",
+            "description": "Ordering",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "range": {
+            "name": "Range",
+            "description": "Limiting and Pagination",
+            "required": false,
+            "in": "header",
+            "type": "string"
+        },
+        "rangeUnit": {
+            "name": "Range-Unit",
+            "description": "Limiting and Pagination",
+            "required": false,
+            "default": "items",
+            "in": "header",
+            "type": "string"
+        },
+        "offset": {
+            "name": "offset",
+            "description": "Limiting and Pagination",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "limit": {
+            "name": "limit",
+            "description": "Limiting and Pagination",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "body.users": {
+            "name": "users",
+            "description": "users",
+            "required": false,
+            "in": "body",
+            "schema": {
+                "$ref": "#/definitions/users"
+            }
+        },
+        "rowFilter.users.id": {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.users.tournament_id": {
+            "name": "tournament_id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.users.name": {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.users.pin_hash": {
+            "name": "pin_hash",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.users.role": {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.users.court_access": {
+            "name": "court_access",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.users.is_active": {
+            "name": "is_active",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.users.created_at": {
+            "name": "created_at",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "body.athletes": {
+            "name": "athletes",
+            "description": "athletes",
+            "required": false,
+            "in": "body",
+            "schema": {
+                "$ref": "#/definitions/athletes"
+            }
+        },
+        "rowFilter.athletes.id": {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.athletes.event_id": {
+            "name": "event_id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.athletes.name": {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.athletes.team": {
+            "name": "team",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.athletes.country_code": {
+            "name": "country_code",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.athletes.photo_url": {
+            "name": "photo_url",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.athletes.seed": {
+            "name": "seed",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.athletes.lot_number": {
+            "name": "lot_number",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.athletes.created_at": {
+            "name": "created_at",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "body.judge_votes": {
+            "name": "judge_votes",
+            "description": "judge_votes",
+            "required": false,
+            "in": "body",
+            "schema": {
+                "$ref": "#/definitions/judge_votes"
+            }
+        },
+        "rowFilter.judge_votes.id": {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.judge_votes.match_id": {
+            "name": "match_id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.judge_votes.judge_id": {
+            "name": "judge_id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.judge_votes.player_side": {
+            "name": "player_side",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.judge_votes.action_type": {
+            "name": "action_type",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.judge_votes.points": {
+            "name": "points",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.judge_votes.status": {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.judge_votes.created_at": {
+            "name": "created_at",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "body.matches": {
+            "name": "matches",
+            "description": "matches",
+            "required": false,
+            "in": "body",
+            "schema": {
+                "$ref": "#/definitions/matches"
+            }
+        },
+        "rowFilter.matches.id": {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.event_id": {
+            "name": "event_id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.court_number": {
+            "name": "court_number",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.round": {
+            "name": "round",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.match_number": {
+            "name": "match_number",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.current_round": {
+            "name": "current_round",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.blue_athlete_id": {
+            "name": "blue_athlete_id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.red_athlete_id": {
+            "name": "red_athlete_id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.blue_score": {
+            "name": "blue_score",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.red_score": {
+            "name": "red_score",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.blue_fouls": {
+            "name": "blue_fouls",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.red_fouls": {
+            "name": "red_fouls",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.status": {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.winner_id": {
+            "name": "winner_id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.win_method": {
+            "name": "win_method",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.timer_seconds": {
+            "name": "timer_seconds",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.max_time": {
+            "name": "max_time",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.break_timer_seconds": {
+            "name": "break_timer_seconds",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.takedown_timer_seconds": {
+            "name": "takedown_timer_seconds",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.timer_started_at": {
+            "name": "timer_started_at",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.timer_paused_at": {
+            "name": "timer_paused_at",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.next_match_id": {
+            "name": "next_match_id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.next_match_position": {
+            "name": "next_match_position",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.matches.created_at": {
+            "name": "created_at",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "body.events": {
+            "name": "events",
+            "description": "events",
+            "required": false,
+            "in": "body",
+            "schema": {
+                "$ref": "#/definitions/events"
+            }
+        },
+        "rowFilter.events.id": {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.events.tournament_id": {
+            "name": "tournament_id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.events.name": {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.events.category": {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.events.gender": {
+            "name": "gender",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.events.age_group": {
+            "name": "age_group",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.events.weight_class": {
+            "name": "weight_class",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.events.match_duration_seconds": {
+            "name": "match_duration_seconds",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.events.break_duration_seconds": {
+            "name": "break_duration_seconds",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.events.max_fouls": {
+            "name": "max_fouls",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.events.rounds_count": {
+            "name": "rounds_count",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.events.status": {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.events.created_at": {
+            "name": "created_at",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "body.score_events": {
+            "name": "score_events",
+            "description": "score_events",
+            "required": false,
+            "in": "body",
+            "schema": {
+                "$ref": "#/definitions/score_events"
+            }
+        },
+        "rowFilter.score_events.id": {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.score_events.match_id": {
+            "name": "match_id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.score_events.athlete_id": {
+            "name": "athlete_id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.score_events.player_side": {
+            "name": "player_side",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.score_events.action_type": {
+            "name": "action_type",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.score_events.points": {
+            "name": "points",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.score_events.match_time_seconds": {
+            "name": "match_time_seconds",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.score_events.takedown": {
+            "name": "takedown",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.score_events.scored_by": {
+            "name": "scored_by",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.score_events.created_at": {
+            "name": "created_at",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "body.tournaments": {
+            "name": "tournaments",
+            "description": "tournaments",
+            "required": false,
+            "in": "body",
+            "schema": {
+                "$ref": "#/definitions/tournaments"
+            }
+        },
+        "rowFilter.tournaments.id": {
+            "name": "id",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.tournaments.slug": {
+            "name": "slug",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.tournaments.name": {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.tournaments.location": {
+            "name": "location",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.tournaments.date": {
+            "name": "date",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.tournaments.status": {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.tournaments.logo_url": {
+            "name": "logo_url",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.tournaments.courts_count": {
+            "name": "courts_count",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        },
+        "rowFilter.tournaments.created_at": {
+            "name": "created_at",
+            "required": false,
+            "in": "query",
+            "type": "string"
+        }
+    },
+    "externalDocs": {
+        "description": "PostgREST Documentation",
+        "url": "https://postgrest.org/en/v14/references/api.html"
+    }
+}

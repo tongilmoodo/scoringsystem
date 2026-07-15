@@ -72,12 +72,19 @@ export default function JudgePage() {
 
   const loadMatch = useCallback(async () => {
     if (!tournament) return;
+    // matches has no tournament_id — resolve via events
+    const { data: evRows } = await supabase
+      .from('events')
+      .select('id')
+      .eq('tournament_id', tournament.id);
+    const evIds = (evRows ?? []).map((e: { id: string }) => e.id);
+    if (!evIds.length) { setMatch(null); return; }
     const { data } = await supabase
       .from('matches')
       .select(ATHLETE_SELECT)
-      .eq('tournament_id', tournament.id)
+      .in('event_id', evIds)
       .eq('court_number', court)
-      .in('status', ['assigned', 'live', 'paused'])
+      .in('status', ['assigned', 'live', 'paused', 'break', 'takedown'])
       .order('match_number')
       .limit(1)
       .maybeSingle();
@@ -169,21 +176,17 @@ export default function JudgePage() {
     })();
   }, [online, queued, clear]);
 
-  const breakActive = !!match?.break_ends_at && new Date(match.break_ends_at).getTime() > now;
-  const breakRemaining = breakActive
-    ? Math.max(0, Math.ceil((new Date(match!.break_ends_at!).getTime() - now) / 1000))
+  const breakActive = match?.status === 'break';
+  const breakRemaining = breakActive && match.timer_paused_at
+    ? Math.max(0, match.break_timer_seconds - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
     : 0;
-  const takedownActive = !!match?.takedown_ends_at && new Date(match.takedown_ends_at).getTime() > now;
-  const takedownRemaining = takedownActive
-    ? Math.max(0, Math.ceil((new Date(match!.takedown_ends_at!).getTime() - now) / 1000))
+  const takedownActive = match?.status === 'takedown';
+  const takedownRemaining = takedownActive && match.timer_paused_at
+    ? Math.max(0, match.takedown_timer_seconds - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
     : 0;
 
   async function vote(side: Side, action: ScoreActionType) {
     if (!match || !user || breakActive) return;
-    if (match.judges_locked) {
-      setFeedback({ side, text: 'Judges locked by controller', kind: 'err' });
-      return;
-    }
     try {
       const { data, error } = await supabase.rpc('cast_vote', {
         p_match_id: match.id,
@@ -255,7 +258,7 @@ export default function JudgePage() {
         <span className="font-bold">Court {court === 1 ? 'A' : 'B'} &middot; Judge</span>
         <span>{ROUND_LABELS[match.round]} &middot; Match {match.match_number} &middot; Round {match.current_round}</span>
         <span className="font-mono text-lg font-black tabular-nums">{formatTime(remaining)}</span>
-        {match.judges_locked && <span className="font-bold text-warning">LOCKED</span>}
+        {breakActive && <span className="font-bold text-warning">BREAK</span>}
         <ConnectionDot connected={judgesConnected} />
         <span className={online ? 'text-success' : 'font-bold text-warning'}>
           {online ? 'Online' : `Offline \u2014 ${queued.length} queued`}
@@ -306,7 +309,7 @@ export default function JudgePage() {
                 {ACTIONS.map((a) => (
                   <button
                     key={a}
-                    disabled={match.judges_locked || breakActive}
+                    disabled={breakActive}
                     onClick={() => vote(side, a)}
                     className={`${btn} ${a === 'foul' ? 'bg-yellow-500 text-black' : shade}`}
                   >

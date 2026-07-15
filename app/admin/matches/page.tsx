@@ -10,7 +10,7 @@ import { countryName, getFlagEmoji } from '@/lib/countries';
 import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match } from '@/lib/types';
 
 const ROUNDS = ['round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'third_place', 'final'] as const;
-const STATUSES = ['scheduled', 'assigned', 'live', 'paused', 'completed'] as const;
+const STATUSES = ['scheduled', 'assigned', 'live', 'paused', 'break', 'takedown', 'completed'] as const;
 
 export default function MatchesPage() {
   const { user, ready, login, logout } = useAuth();
@@ -22,10 +22,17 @@ export default function MatchesPage() {
 
   const load = useCallback(async () => {
     if (!tournament) return;
+    // matches don't have tournament_id — join through events
+    const { data: eventRows } = await supabase
+      .from('events')
+      .select('id')
+      .eq('tournament_id', tournament.id);
+    const eventIds = (eventRows ?? []).map((e: { id: string }) => e.id);
+    if (!eventIds.length) return setMatches([]);
     const { data } = await supabase
       .from('matches')
       .select(ATHLETE_SELECT)
-      .eq('tournament_id', tournament.id)
+      .in('event_id', eventIds)
       .order('match_number');
     setMatches((data ?? []) as Match[]);
     // eslint-disable-next-line react-hooks/exhaustive-deps

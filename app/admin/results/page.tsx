@@ -24,10 +24,16 @@ export default function ResultsPage() {
 
   const load = useCallback(async () => {
     if (!tournament) return;
+    const { data: evRows } = await supabase
+      .from('events')
+      .select('id')
+      .eq('tournament_id', tournament.id);
+    const eventIds = (evRows ?? []).map((e: { id: string }) => e.id);
+    if (!eventIds.length) return setCompleted([]);
     const { data } = await supabase
       .from('matches')
       .select(ATHLETE_SELECT)
-      .eq('tournament_id', tournament.id)
+      .in('event_id', eventIds)
       .eq('status', 'completed')
       .order('match_number');
     setCompleted((data ?? []) as Match[]);
