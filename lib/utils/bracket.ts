@@ -16,6 +16,7 @@ export interface DrawMatchRow {
   round: Round;
   match_number: number;
   current_round: number;
+  total_rounds: number;
   blue_athlete_id: string | null;
   red_athlete_id: string | null;
   blue_score: number;
@@ -52,7 +53,7 @@ function shuffle<T>(arr: T[]): T[] {
  * Returns rounds ordered first-round-first. Insert them in REVERSE order so
  * next_match_id foreign keys already exist.
  */
-export function generateBracket(eventId: string, athletes: Athlete[]) {
+export function generateBracket(eventId: string, athletes: Athlete[], totalRounds = 1) {
   const n = athletes.length;
   if (n < 2) throw new Error('Need at least 2 athletes');
   if (n > 16) throw new Error('Maximum 16 athletes per bracket');
@@ -86,6 +87,7 @@ export function generateBracket(eventId: string, athletes: Athlete[]) {
       round,
       match_number: 0,
       current_round: 1,
+      total_rounds: totalRounds,
       blue_athlete_id: null,
       red_athlete_id: null,
       blue_score: 0,
