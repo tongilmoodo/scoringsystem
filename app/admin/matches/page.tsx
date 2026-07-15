@@ -1,40 +1,66 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
 import { useActiveTournament } from '@/lib/useTournament';
 import PinPad from '@/components/PinPad';
 import { countryName, getFlagEmoji } from '@/lib/countries';
-import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match } from '@/lib/types';
+import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match, type EventRecord } from '@/lib/types';
 
 const ROUNDS = ['round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'third_place', 'final'] as const;
 const STATUSES = ['scheduled', 'assigned', 'live', 'paused', 'break', 'takedown', 'completed'] as const;
 
-export default function MatchesPage() {
+function MatchesContent() {
   const { user, ready, login, logout } = useAuth();
   const { tournament, ready: tournamentReady } = useActiveTournament();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const eventFilter = searchParams.get('event') ?? '';
+
   const [matches, setMatches] = useState<Match[]>([]);
+  const [events, setEvents] = useState<EventRecord[]>([]);
   const [roundFilter, setRoundFilter] = useState('');
   const [courtFilter, setCourtFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     if (!tournament) return;
-    // matches don't have tournament_id — join through events
+    
     const { data: eventRows } = await supabase
       .from('events')
-      .select('id')
-      .eq('tournament_id', tournament.id);
+      .select('*')
+      .eq('tournament_id', tournament.id)
+      .order('name');
+    
+    setEvents((eventRows ?? []) as EventRecord[]);
+    
     const eventIds = (eventRows ?? []).map((e: { id: string }) => e.id);
     if (!eventIds.length) return setMatches([]);
+    
     const { data } = await supabase
       .from('matches')
-      .select(ATHLETE_SELECT)
+      .select(`${ATHLETE_SELECT}, events(name, category, weight_class)`)
       .in('event_id', eventIds)
       .order('match_number');
-    setMatches((data ?? []) as Match[]);
+      
+    const loadedMatches = (data ?? []) as Match[];
+    setMatches(loadedMatches);
+
+    const newExpanded = new Set<string>();
+    for (const m of loadedMatches) {
+      if (['live', 'paused', 'assigned', 'break', 'takedown'].includes(m.status)) {
+        newExpanded.add(m.event_id);
+      }
+    }
+    setExpandedGroups(prev => {
+      const merged = new Set(prev);
+      newExpanded.forEach(id => merged.add(id));
+      return merged;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tournament?.id]);
 
@@ -53,6 +79,20 @@ export default function MatchesPage() {
   }, [load]);
 
   async function assign(m: Match, court: number) {
+    const activeOnCourt = matches.find(x => 
+      x.court_number === court && 
+      x.id !== m.id && 
+      ['live', 'paused', 'break', 'takedown'].includes(x.status)
+    );
+
+    if (activeOnCourt && activeOnCourt.event_id !== m.event_id) {
+      const activeEventName = activeOnCourt.events ? `${activeOnCourt.events.name} ${activeOnCourt.events.weight_class ?? ''}`.trim() : 'another event';
+      const mEventName = m.events ? `${m.events.name} ${m.events.weight_class ?? ''}`.trim() : 'this event';
+      if (!window.confirm(`Court ${court === 1 ? 'A' : 'B'} is currently running ${activeEventName} — assign this ${mEventName} match anyway?`)) {
+        return;
+      }
+    }
+
     await supabase.from('matches').update({ court_number: court, status: 'assigned' }).eq('id', m.id);
   }
 
@@ -91,6 +131,15 @@ export default function MatchesPage() {
       .eq('id', m.id);
   }
 
+  function toggleGroup(eventId: string) {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(eventId)) next.delete(eventId);
+      else next.add(eventId);
+      return next;
+    });
+  }
+
   if (!ready || !tournamentReady) return null;
   if (!user) return <PinPad title="Admin Login" onSubmit={(pin) => login(pin)} />;
   if (user.role !== 'admin') {
@@ -102,18 +151,6 @@ export default function MatchesPage() {
     );
   }
 
-  const filtered = matches.filter(
-    (m) =>
-      (!roundFilter || m.round === roundFilter) &&
-      (!courtFilter || String(m.court_number) === courtFilter) &&
-      (!statusFilter || m.status === statusFilter)
-  );
-
-  const winnerName = (m: Match) =>
-    m.winner_id === m.blue_athlete_id ? m.blue?.name : m.winner_id === m.red_athlete_id ? m.red?.name : '';
-
-  const select = 'rounded-lg border border-gray-700 bg-gray-800 px-3 py-2';
-
   if (!tournament) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-4">
@@ -123,9 +160,78 @@ export default function MatchesPage() {
     );
   }
 
+  const baseFiltered = matches.filter(
+    (m) =>
+      (!roundFilter || m.round === roundFilter) &&
+      (!courtFilter || String(m.court_number) === courtFilter) &&
+      (!statusFilter || m.status === statusFilter) &&
+      (!eventFilter || m.event_id === eventFilter)
+  );
+
+  const winnerName = (m: Match) =>
+    m.winner_id === m.blue_athlete_id ? m.blue?.name : m.winner_id === m.red_athlete_id ? m.red?.name : '';
+
+  const select = 'rounded-lg border border-gray-700 bg-gray-800 px-3 py-2';
+
+  // Group matches if no event filter is set
+  const grouped = !eventFilter 
+    ? events.map(ev => ({
+        event: ev,
+        matches: baseFiltered.filter(m => m.event_id === ev.id)
+      })).filter(g => g.matches.length > 0)
+    : [];
+
+  const MatchRow = ({ m }: { m: Match }) => (
+    <tr key={m.id} className="border-b border-gray-800 last:border-0 hover:bg-white/5">
+      <td className="p-3">{m.match_number}</td>
+      {eventFilter && (
+        <td className="p-3 text-xs text-gray-400">
+           {m.events ? `${m.events.name} · ${m.events.category} · ${m.events.weight_class ?? 'N/A'}` : 'Unknown'}
+        </td>
+      )}
+      <td className="p-3">{ROUND_LABELS[m.round]}</td>
+      <td className="p-3 text-blue-400">{m.blue?.country_code ? `${getFlagEmoji(m.blue.country_code)} ` : ''}{m.blue?.name ?? 'TBD'}</td>
+      <td className="p-3 text-red-400">{m.red?.country_code ? `${getFlagEmoji(m.red.country_code)} ` : ''}{m.red?.name ?? 'TBD'}</td>
+      <td className="p-3 tabular-nums">{m.blue_score} : {m.red_score}</td>
+      <td className="p-3">{m.court_number ? (m.court_number === 1 ? 'A' : 'B') : '-'}</td>
+      <td className="p-3">
+        <span className={`inline-block rounded px-2 py-1 text-xs font-bold ${
+          m.status === 'live' ? 'bg-red-500/20 text-red-500' : 
+          m.status === 'completed' ? 'bg-green-500/20 text-green-500' : 
+          'bg-gray-800 text-gray-400'
+        }`}>
+          {m.status.toUpperCase()}
+        </span>
+      </td>
+      <td className="p-3">{winnerName(m)} {m.win_method ? `(${m.win_method})` : ''}</td>
+      <td className="p-3 text-right">
+        {m.status === 'scheduled' && (
+          <>
+            <button onClick={() => assign(m, 1)} className="mr-2 text-green-400 underline hover:text-green-300">→ A</button>
+            <button onClick={() => assign(m, 2)} className="mr-2 text-green-400 underline hover:text-green-300">→ B</button>
+          </>
+        )}
+        {['live', 'paused', 'assigned'].includes(m.status) && (
+          <>
+            <button onClick={() => adjustTimer(m, 10)} className="mr-2 text-yellow-400 underline">+10s</button>
+            <button onClick={() => adjustTimer(m, -10)} className="mr-2 text-yellow-400 underline">-10s</button>
+          </>
+        )}
+        <select
+          onChange={(e) => { if (e.target.value) setStatus(m, e.target.value); e.target.value = ''; }}
+          className="mr-2 rounded bg-gray-800 px-1 py-1 text-xs"
+          defaultValue=""
+        >
+          <option value="">Set state…</option>
+          {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <button onClick={() => resetMatch(m)} className="text-red-400 underline hover:text-red-300">Reset</button>
+      </td>
+    </tr>
+  );
+
   return (
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 p-6">
-      {/* Interactive view (hidden when printing) */}
       <div className="print:hidden">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-black">Matches</h1>
@@ -139,6 +245,21 @@ export default function MatchesPage() {
 
         {/* Filters */}
         <div className="mb-4 flex flex-wrap gap-3">
+          <select 
+            className={select} 
+            value={eventFilter} 
+            onChange={(e) => {
+              const url = new URL(window.location.href);
+              if (e.target.value) url.searchParams.set('event', e.target.value);
+              else url.searchParams.delete('event');
+              router.push(url.pathname + url.search);
+            }}
+          >
+            <option value="">All Events</option>
+            {events.map((ev) => (
+              <option key={ev.id} value={ev.id}>{ev.name} &middot; {ev.category} &middot; {ev.weight_class ?? 'N/A'}</option>
+            ))}
+          </select>
           <select className={select} value={roundFilter} onChange={(e) => setRoundFilter(e.target.value)}>
             <option value="">All rounds</option>
             {ROUNDS.map((r) => (
@@ -158,11 +279,12 @@ export default function MatchesPage() {
           </select>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-gray-800">
+        <div className="overflow-x-auto rounded-xl border border-gray-800 bg-gray-900/50">
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-900 text-gray-400">
               <tr>
                 <th className="p-3">#</th>
+                {eventFilter && <th className="p-3">Event</th>}
                 <th className="p-3">Round</th>
                 <th className="p-3">Blue</th>
                 <th className="p-3">Red</th>
@@ -173,55 +295,67 @@ export default function MatchesPage() {
                 <th className="p-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
-              {filtered.map((m) => (
-                <tr key={m.id}>
-                  <td className="p-3">{m.match_number}</td>
-                  <td className="p-3">{ROUND_LABELS[m.round]}</td>
-                  <td className="p-3 text-blue-400">{m.blue?.country_code ? `${getFlagEmoji(m.blue.country_code)} ` : ''}{m.blue?.name ?? 'TBD'}</td>
-                  <td className="p-3 text-red-400">{m.red?.country_code ? `${getFlagEmoji(m.red.country_code)} ` : ''}{m.red?.name ?? 'TBD'}</td>
-                  <td className="p-3 tabular-nums">{m.blue_score} : {m.red_score}</td>
-                  <td className="p-3">{m.court_number ? (m.court_number === 1 ? 'A' : 'B') : '-'}</td>
-                  <td className="p-3">{m.status}</td>
-                  <td className="p-3">{winnerName(m)} {m.win_method ? `(${m.win_method})` : ''}</td>
-                  <td className="p-3">
-                    {m.status === 'scheduled' && (
-                      <>
-                        <button onClick={() => assign(m, 1)} className="mr-2 text-green-400 underline">→ A</button>
-                        <button onClick={() => assign(m, 2)} className="mr-2 text-green-400 underline">→ B</button>
-                      </>
-                    )}
-                    {['live', 'paused', 'assigned'].includes(m.status) && (
-                      <>
-                        <button onClick={() => adjustTimer(m, 10)} className="mr-2 text-yellow-400 underline">+10s</button>
-                        <button onClick={() => adjustTimer(m, -10)} className="mr-2 text-yellow-400 underline">-10s</button>
-                      </>
-                    )}
-                    <select
-                      onChange={(e) => { if (e.target.value) setStatus(m, e.target.value); e.target.value = ''; }}
-                      className="mr-2 rounded bg-gray-800 px-1 py-0.5 text-xs"
-                      defaultValue=""
+            
+            {eventFilter ? (
+              <tbody className="divide-y divide-gray-800">
+                {baseFiltered.map(m => <MatchRow key={m.id} m={m} />)}
+              </tbody>
+            ) : (
+              grouped.map(group => {
+                const isExpanded = expandedGroups.has(group.event.id);
+                const completed = group.matches.filter(m => m.status === 'completed').length;
+                const total = group.matches.length;
+                return (
+                  <tbody key={group.event.id}>
+                    <tr 
+                      className="cursor-pointer border-y border-gray-800 bg-gray-800/40 hover:bg-gray-800"
+                      onClick={() => toggleGroup(group.event.id)}
                     >
-                      <option value="">Set state…</option>
-                      {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                    <button onClick={() => resetMatch(m)} className="text-red-400 underline">Reset</button>
+                      <td colSpan={10} className="p-3 font-bold">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block w-4 text-center">
+                              {isExpanded ? '▼' : '▶'}
+                            </span>
+                            <span>{group.event.name}</span>
+                            <span className="text-gray-400 font-normal">
+                              &middot; {group.event.category} &middot; {group.event.weight_class ?? 'N/A'}
+                            </span>
+                          </div>
+                          <div className="text-xs font-normal text-gray-400">
+                            {completed} / {total} matches completed
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && group.matches.map(m => <MatchRow key={m.id} m={m} />)}
+                  </tbody>
+                );
+              })
+            )}
+            
+            {baseFiltered.length === 0 && (
+              <tbody>
+                <tr>
+                  <td colSpan={10} className="p-6 text-center text-gray-500">
+                    No matches found matching the criteria.
                   </td>
                 </tr>
-              ))}
-            </tbody>
+              </tbody>
+            )}
           </table>
         </div>
       </div>
 
       {/* Print-only official match sheets */}
       <div className="hidden print:block">
-        {filtered.map((m) => (
+        {baseFiltered.map((m) => (
           <div key={m.id} className="print-sheet">
             <h1 style={{ fontSize: 20, fontWeight: 900, textAlign: 'center' }}>
               {tournament.name} &mdash; Official Match Sheet
             </h1>
             <p style={{ textAlign: 'center', marginBottom: 16 }}>
+              {m.events ? `${m.events.name} · ${m.events.category} · ${m.events.weight_class} · ` : ''}
               {ROUND_LABELS[m.round]} · Match #{m.match_number} · Court{' '}
               {m.court_number ? (m.court_number === 1 ? 'A' : 'B') : '____'} · Time remaining: {formatTime(m.timer_seconds)}
             </p>
@@ -264,5 +398,13 @@ export default function MatchesPage() {
         ))}
       </div>
     </main>
+  );
+}
+
+export default function MatchesPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading matches...</div>}>
+      <MatchesContent />
+    </Suspense>
   );
 }

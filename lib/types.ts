@@ -13,6 +13,18 @@ export interface Tournament {
   logo_url?: string | null;
 }
 
+export interface EventRecord {
+  id: string;
+  tournament_id: string;
+  name: string;
+  category: string;
+  gender: string;
+  age_group: string;
+  weight_class: string | null;
+  status: string;
+  bracket_status: 'draft' | 'published';
+}
+
 export interface Athlete {
   id: string;
   event_id: string;
@@ -50,6 +62,7 @@ export interface Match {
   next_match_position: Side | null;
   blue?: Athlete | null;
   red?: Athlete | null;
+  events?: EventRecord | null;
 }
 
 export interface JudgeVote {
