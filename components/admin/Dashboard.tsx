@@ -23,7 +23,6 @@ interface JudgeUser {
 }
 
 const EMPTY_FORM = { name: '', date: '', location: '', courts_count: 2 };
-const ONLINE_MS = 60000;
 
 export default function Dashboard() {
   const { user, ready, login, logout } = useAuth();
@@ -35,7 +34,6 @@ export default function Dashboard() {
   const [scheduled, setScheduled] = useState<Match[]>([]);
   const [events, setEvents] = useState<ScoreEvent[]>([]);
   const [judges, setJudges] = useState<JudgeUser[]>([]);
-  const [now, setNow] = useState(Date.now());
 
   // Live connection presence per court (green/grey dots). Subscribe to both
   // possible courts unconditionally so hook order is stable across renders.
@@ -110,7 +108,6 @@ export default function Dashboard() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'score_events' }, load)
       .subscribe();
     const poll = setInterval(() => {
-      setNow(Date.now());
       load();
     }, 15000);
     return () => {
