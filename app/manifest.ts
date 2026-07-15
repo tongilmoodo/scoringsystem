@@ -5,8 +5,10 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Mombasa Open Scoring System',
     short_name: 'MO Scoring',
     description: 'Live tournament scoring for the Mombasa Open',
-    start_url: '/',
-    display: 'standalone',
+    start_url: '/scoreboard',
+    display: 'fullscreen',
+    display_override: ['fullscreen', 'standalone', 'minimal-ui'],
+    orientation: 'landscape',
     background_color: '#030712',
     theme_color: '#030712',
     icons: [

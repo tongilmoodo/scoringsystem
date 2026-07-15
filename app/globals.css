@@ -23,6 +23,22 @@ body {
   font-family: var(--font-inter), sans-serif;
 }
 
+/*
+ * Full-viewport fill for scoreboard / kiosk screens.
+ *
+ * Uses dynamic viewport units (dvh/dvw) so the layout fills the *visible*
+ * area on mobile and smart-TV browsers, where the address bar / OS chrome
+ * would otherwise shrink 100vh and leave a gap. Falls back to vh/vw on old
+ * engines that don't support dvh. Safe-area padding handles notches/overscan.
+ */
+.screen-fill {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  width: 100dvw;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
 /* Athletic condensed headline utility */
 .font-headline {
   font-family: var(--font-oswald), sans-serif;
