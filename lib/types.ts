@@ -96,13 +96,23 @@ export interface ScoreEvent {
 }
 
 export interface CastVoteResult {
-  committed: boolean;
-  error?: 'already_voted' | 'locked' | 'match_completed' | 'break';
+  success?: boolean;
+  committed?: boolean;
+  // Legacy error keys (older cast_vote) + new code/error strings.
+  error?: string;
+  code?: 'MATCH_NOT_FOUND' | 'MATCH_NOT_ACTIVE' | string;
+  current_status?: string;
   action?: string;
+  action_display?: string;
+  points?: number;
   votes?: number;
   top_action?: string;
   top_votes?: number;
+  total_votes?: number;
+  threshold?: number;
   side?: Side;
+  player_side?: Side;
+  message?: string;
   takedown?: boolean;
 }
 
