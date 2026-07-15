@@ -265,6 +265,7 @@ RETURNS JSONB AS $$
 DECLARE
   v_points INT;
   v_count INT;
+  v_my_count INT;
   v_winning_action action_type;
   v_consensus_threshold INT := 3;
 BEGIN
@@ -300,6 +301,14 @@ BEGIN
   ORDER BY COUNT(*) DESC
   LIMIT 1;
 
+  -- Count of votes for the action this judge just cast (for UI feedback).
+  SELECT COUNT(*) INTO v_my_count
+  FROM judge_votes
+  WHERE match_id = p_match_id
+    AND player_side = p_player_side
+    AND action_type = p_action_type
+    AND status = 'pending';
+
   IF v_count >= v_consensus_threshold THEN
     INSERT INTO score_events (match_id, player_side, action_type, points, scored_by)
     VALUES (p_match_id, p_player_side, v_winning_action, 
@@ -315,7 +324,9 @@ BEGIN
     RETURN jsonb_build_object(
       'committed', true,
       'action', v_winning_action,
-      'votes', v_count,
+      'top_action', v_winning_action,
+      'votes', COALESCE(v_count, 0),
+      'top_votes', COALESCE(v_count, 0),
       'side', p_player_side
     );
   END IF;
@@ -323,7 +334,9 @@ BEGIN
   RETURN jsonb_build_object(
     'committed', false,
     'action', p_action_type,
-    'top_votes', v_count,
+    'top_action', v_winning_action,
+    'votes', COALESCE(v_my_count, 0),
+    'top_votes', COALESCE(v_count, 0),
     'side', p_player_side
   );
 END;
