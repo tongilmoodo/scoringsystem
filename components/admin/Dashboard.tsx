@@ -35,9 +35,9 @@ export default function Dashboard() {
   const [events, setEvents] = useState<ScoreEvent[]>([]);
   const [judges, setJudges] = useState<JudgeUser[]>([]);
 
-  // Live connection presence per court (green/grey dots). Subscribe to both
-  // possible courts unconditionally so hook order is stable across renders.
-  const presence = useCourtPresence([1, 2]);
+  // Live connection presence per court (green/grey dots + who's connected).
+  // Subscribe to both possible courts unconditionally so hook order is stable.
+  const { presence, members } = useCourtPresence([1, 2]);
 
   const loadTournaments = useCallback(async () => {
     const { data } = await supabase.from('tournaments').select('*').order('date', { ascending: false });
@@ -288,6 +288,33 @@ export default function Dashboard() {
         </div>
 
         <div className="rounded-xl border border-white/10 bg-bg-dark p-4">
+          <h2 className="mb-3 font-bold">Live Now (connected devices)</h2>
+          {courts.map((c) => {
+            const present = members[c] ?? [];
+            return (
+              <div key={c} className="mb-2">
+                <span className="mr-2 text-sm text-text-muted">Court {c === 1 ? 'A' : 'B'}:</span>
+                {present.length === 0 ? (
+                  <span className="text-sm text-gray-500">nobody connected</span>
+                ) : (
+                  <span className="inline-flex flex-wrap gap-1 align-middle">
+                    {present.map((p) => (
+                      <span
+                        key={p.user_id}
+                        className={`rounded px-2 py-0.5 text-xs font-bold ${p.role === 'controller' ? 'bg-crimson/20 text-crimson' : 'bg-success/20 text-success'}`}
+                        title={`${p.name ?? p.user_id} \u00b7 ${p.role ?? 'user'}`}
+                      >
+                        {(p.name ?? 'User')} ({p.role ?? 'user'})
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="rounded-xl border border-white/10 bg-bg-dark p-4 md:col-span-2">
           <h2 className="mb-3 font-bold">Court Health</h2>
           {courts.map((c) => (
             <div key={c} className="mb-2 flex items-center gap-3">

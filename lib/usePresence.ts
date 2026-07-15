@@ -52,11 +52,17 @@ export function useTrackPresence(
 }
 
 /**
- * Subscribe (read-only) to one or more court presence channels and return the
- * set of user_ids currently present on each court.
+ * Subscribe (read-only) to one or more court presence channels.
+ *
+ * Returns both:
+ *  - `presence[court]`  — a Set of user_ids present on each court (kept for
+ *    backwards compatibility with the judge-dot lookup), and
+ *  - `members[court]`   — the full list of present members (name + role),
+ *    so the UI can show WHO is connected regardless of any users-table join.
  */
 export function useCourtPresence(courts: number[]) {
   const [presence, setPresence] = useState<Record<number, Set<string>>>({});
+  const [members, setMembers] = useState<Record<number, PresentMember[]>>({});
   const key = courts.join(',');
 
   useEffect(() => {
@@ -68,9 +74,21 @@ export function useCourtPresence(courts: number[]) {
       });
 
       const sync = () => {
-        const state = channel.presenceState();
-        const ids = new Set(Object.keys(state));
+        const state = channel.presenceState() as Record<string, PresentMember[]>;
+        const ids = new Set<string>();
+        const list: PresentMember[] = [];
+        // presenceState() is keyed by the track key; each value is the array of
+        // metas tracked under that key. Flatten to a de-duplicated member list.
+        Object.entries(state).forEach(([presenceKey, metas]) => {
+          const meta = (metas?.[0] ?? {}) as PresentMember;
+          const userId = meta.user_id ?? presenceKey;
+          if (!ids.has(userId)) {
+            ids.add(userId);
+            list.push({ ...meta, user_id: userId });
+          }
+        });
         setPresence((prev) => ({ ...prev, [court]: ids }));
+        setMembers((prev) => ({ ...prev, [court]: list }));
       };
 
       channel
@@ -88,5 +106,5 @@ export function useCourtPresence(courts: number[]) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return presence;
+  return { presence, members };
 }
