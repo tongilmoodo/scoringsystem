@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/useAuth';
 import { useTournamentBySlug } from '@/lib/useTournament';
 import { useKiosk } from '@/lib/useKiosk';
 import { useHeartbeat } from '@/lib/useHeartbeat';
+import { useTrackPresence } from '@/lib/usePresence';
 import { playBeep, playBuzzer, playChime, playTick, playTimerStart, playBreak, playTakedown, playFanfare } from '@/lib/sounds';
 import PinPad from '@/components/PinPad';
 import VoiceScoring from '@/components/VoiceScoring';
@@ -77,6 +78,12 @@ export default function ControllerPage() {
   // Keep the tablet awake; warn on unload while the match is live.
   useKiosk(match?.status === 'live');
   useHeartbeat(user?.id);
+  // Join the court presence channel so the admin dashboard shows this
+  // controller as live. Presence clears automatically when the tab closes.
+  useTrackPresence(
+    user?.role === 'controller' ? court : null,
+    user ? { user_id: user.id, name: user.name, role: 'controller' } : null,
+  );
 
   const loadMatch = useCallback(async () => {
     if (!tournament) return;
@@ -118,11 +125,13 @@ export default function ControllerPage() {
 
   useEffect(() => {
     if (!tournament) return;
+    // matches has no tournament_id column, so we cannot server-filter on it;
+    // subscribe to all match changes and re-resolve via events in loadMatch.
     const ch = supabase
       .channel(`matches:t:${slug}:court:${court}:controller`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'matches', filter: `tournament_id=eq.${tournament.id}` },
+        { event: '*', schema: 'public', table: 'matches' },
         () => loadMatch()
       )
       .subscribe();
