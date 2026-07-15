@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/useAuth';
 import { useActiveTournament, type ActiveTournament } from '@/lib/useTournament';
+import { useCourtPresence } from '@/lib/usePresence';
 import PinPad from '@/components/PinPad';
 import Logo from '@/components/ui/Logo';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -43,15 +44,35 @@ export default function Dashboard() {
 
   const load = useCallback(async () => {
     if (!tournament) return;
+    // matches has no tournament_id column — resolve the tournament's event ids
+    // first, then filter matches / score_events through event_id.
+    const { data: evRows } = await supabase
+      .from('events')
+      .select('id')
+      .eq('tournament_id', tournament.id);
+    const evIds = (evRows ?? []).map((e: { id: string }) => e.id);
+
+    if (evIds.length === 0) {
+      setCourtMatches({ 1: null, 2: null });
+      setScheduled([]);
+      setEvents([]);
+    }
+
     const [{ data: active }, { data: sched }, { data: evs }, { data: js }] = await Promise.all([
-      supabase.from('matches').select(ATHLETE_SELECT).eq('tournament_id', tournament.id).in('status', ['assigned', 'live', 'paused']),
-      supabase.from('matches').select(ATHLETE_SELECT).eq('tournament_id', tournament.id).eq('status', 'scheduled').order('match_number'),
-      supabase
-        .from('score_events')
-        .select('*, match:matches!inner(tournament_id)')
-        .eq('match.tournament_id', tournament.id)
-        .order('created_at', { ascending: false })
-        .limit(15),
+      evIds.length
+        ? supabase.from('matches').select(ATHLETE_SELECT).in('event_id', evIds).in('status', ['assigned', 'live', 'paused'])
+        : Promise.resolve({ data: [] as Match[] }),
+      evIds.length
+        ? supabase.from('matches').select(ATHLETE_SELECT).in('event_id', evIds).eq('status', 'scheduled').order('match_number')
+        : Promise.resolve({ data: [] as Match[] }),
+      evIds.length
+        ? supabase
+            .from('score_events')
+            .select('*, match:matches!inner(event_id)')
+            .in('match.event_id', evIds)
+            .order('created_at', { ascending: false })
+            .limit(15)
+        : Promise.resolve({ data: [] as ScoreEvent[] }),
       supabase
         .from('users')
         .select('id, name, court_access, last_active_at')
