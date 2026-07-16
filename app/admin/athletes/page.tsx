@@ -66,8 +66,13 @@ export default function AthletesPage() {
       event_id: form.event_id,
       seed: form.seed ? Number(form.seed) : null,
     };
-    if (editingId) await supabase.from('athletes').update(payload).eq('id', editingId);
-    else await supabase.from('athletes').insert(payload);
+    const { error } = editingId
+      ? await supabase.from('athletes').update(payload).eq('id', editingId)
+      : await supabase.from('athletes').insert(payload);
+    if (error) {
+      alert(`Could not save athlete: ${error.message}`);
+      return;
+    }
     setForm(EMPTY);
     setEditingId(null);
     load();
@@ -124,7 +129,7 @@ export default function AthletesPage() {
     if (!preview) return;
     const valid = preview.filter(rowValid);
     if (valid.length === 0) return;
-    await supabase.from('athletes').insert(
+    const { error } = await supabase.from('athletes').insert(
       valid.map((p) => ({
         name: p.name,
         team: p.team || null,
@@ -132,6 +137,10 @@ export default function AthletesPage() {
         event_id: p.event_id,
       }))
     );
+    if (error) {
+      alert(`Import failed: ${error.message}`);
+      return;
+    }
     setPreview(null);
     setCsvText('');
     load();
