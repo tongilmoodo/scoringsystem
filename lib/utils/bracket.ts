@@ -53,7 +53,13 @@ function shuffle<T>(arr: T[]): T[] {
  * Returns rounds ordered first-round-first. Insert them in REVERSE order so
  * next_match_id foreign keys already exist.
  */
-export function generateBracket(eventId: string, athletes: Athlete[], totalRounds = 1) {
+export function generateBracket(
+  eventId: string,
+  athletes: Athlete[],
+  totalRounds = 1,
+  maxTime = 180,
+  breakSeconds = 30,
+) {
   const n = athletes.length;
   if (n < 2) throw new Error('Need at least 2 athletes');
   if (n > 16) throw new Error('Maximum 16 athletes per bracket');
@@ -97,9 +103,9 @@ export function generateBracket(eventId: string, athletes: Athlete[], totalRound
       status: 'scheduled' as const,
       winner_id: null,
       win_method: null,
-      timer_seconds: 180,
-      max_time: 180,
-      break_timer_seconds: 30,
+      timer_seconds: maxTime,
+      max_time: maxTime,
+      break_timer_seconds: breakSeconds,
       takedown_timer_seconds: 30,
       next_match_id: null,
       next_match_position: null,
