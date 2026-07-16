@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
@@ -67,6 +68,16 @@ export default function ScoreboardPage() {
         {courts.map((c) => (
           <CourtDisplay key={c} court={c} tournamentId={tournament.id} eventName={eventNames[c]} />
         ))}
+      </div>
+      {/* Footer nav */}
+      <div className="flex items-center justify-between px-2 py-1">
+        <p className="text-xs text-text-muted">{tournament.name}</p>
+        <Link
+          href={`/t/${slug}/upcoming`}
+          className="rounded-lg bg-white/10 px-3 py-1 text-xs font-bold text-white/70 hover:bg-white/20 hover:text-white transition"
+        >
+          📅 Upcoming Matches
+        </Link>
       </div>
     </main>
   );
