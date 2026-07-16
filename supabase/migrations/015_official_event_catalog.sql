@@ -82,13 +82,13 @@ BEGIN
 
   -- ============================================
   -- MEN FORM / BON / KATA (4 belt ranks)
-  -- Max 5 Minutes, 1 Round
+  -- Max 7 Minutes, 1 Round
   -- ============================================
   INSERT INTO events (tournament_id, name, category, gender, age_group, belt_rank, rounds, round_duration_seconds, break_duration_seconds, timer_duration_seconds, status) VALUES
-  (v_tid, 'Men Adults — Form — White to Yellow Belt', 'form_bon_kata', 'male', 'adult_18_24', 'White to Yellow Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Men Adults — Form — Green to Blue Belt', 'form_bon_kata', 'male', 'adult_18_24', 'Green to Blue Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Men Adults — Form — Brown Belt', 'form_bon_kata', 'male', 'adult_18_24', 'Brown Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Men Adults — Form — Black Belt', 'form_bon_kata', 'male', 'adult_18_24', 'Black Belt', 1, 300, 0, 300, 'active');
+  (v_tid, 'Men Adults — Form — White to Yellow Belt', 'form_bon_kata', 'male', 'adult_18_24', 'White to Yellow Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Men Adults — Form — Green to Blue Belt', 'form_bon_kata', 'male', 'adult_18_24', 'Green to Blue Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Men Adults — Form — Brown Belt', 'form_bon_kata', 'male', 'adult_18_24', 'Brown Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Men Adults — Form — Black Belt', 'form_bon_kata', 'male', 'adult_18_24', 'Black Belt', 1, 420, 0, 420, 'active');
 
   -- ============================================
   -- MEN SPECIAL TECHNIQUES (Weapons & Breaking)
@@ -121,13 +121,13 @@ BEGIN
 
   -- ============================================
   -- LADIES FORM / BON / KATA (4 belt ranks)
-  -- Max 5 Minutes, 1 Round
+  -- Max 7 Minutes, 1 Round
   -- ============================================
   INSERT INTO events (tournament_id, name, category, gender, age_group, belt_rank, rounds, round_duration_seconds, break_duration_seconds, timer_duration_seconds, status) VALUES
-  (v_tid, 'Ladies Adults — Form — White to Yellow Belt', 'form_bon_kata', 'female', 'adult_18_24', 'White to Yellow Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Ladies Adults — Form — Green to Blue Belt', 'form_bon_kata', 'female', 'adult_18_24', 'Green to Blue Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Ladies Adults — Form — Brown Belt', 'form_bon_kata', 'female', 'adult_18_24', 'Brown Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Ladies Adults — Form — Black Belt', 'form_bon_kata', 'female', 'adult_18_24', 'Black Belt', 1, 300, 0, 300, 'active');
+  (v_tid, 'Ladies Adults — Form — White to Yellow Belt', 'form_bon_kata', 'female', 'adult_18_24', 'White to Yellow Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Ladies Adults — Form — Green to Blue Belt', 'form_bon_kata', 'female', 'adult_18_24', 'Green to Blue Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Ladies Adults — Form — Brown Belt', 'form_bon_kata', 'female', 'adult_18_24', 'Brown Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Ladies Adults — Form — Black Belt', 'form_bon_kata', 'female', 'adult_18_24', 'Black Belt', 1, 420, 0, 420, 'active');
 
   -- ============================================
   -- LADIES SPECIAL TECHNIQUES (Weapons & Breaking)
@@ -186,33 +186,33 @@ BEGIN
 
   -- ============================================
   -- BOYS FORM — 9-11 (4 belt ranks)
-  -- Max 5 Minutes, 1 Round
+  -- Max 7 Minutes, 1 Round
   -- ============================================
   INSERT INTO events (tournament_id, name, category, gender, age_group, belt_rank, rounds, round_duration_seconds, break_duration_seconds, timer_duration_seconds, status) VALUES
-  (v_tid, 'Boys 9-11 — Form — White to Yellow Belt', 'form_bon_kata', 'male', 'kids_9_11', 'White to Yellow Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Boys 9-11 — Form — Green to Blue Belt', 'form_bon_kata', 'male', 'kids_9_11', 'Green to Blue Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Boys 9-11 — Form — Brown Belt', 'form_bon_kata', 'male', 'kids_9_11', 'Brown Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Boys 9-11 — Form — Black Belt', 'form_bon_kata', 'male', 'kids_9_11', 'Black Belt', 1, 300, 0, 300, 'active');
+  (v_tid, 'Boys 9-11 — Form — White to Yellow Belt', 'form_bon_kata', 'male', 'kids_9_11', 'White to Yellow Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Boys 9-11 — Form — Green to Blue Belt', 'form_bon_kata', 'male', 'kids_9_11', 'Green to Blue Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Boys 9-11 — Form — Brown Belt', 'form_bon_kata', 'male', 'kids_9_11', 'Brown Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Boys 9-11 — Form — Black Belt', 'form_bon_kata', 'male', 'kids_9_11', 'Black Belt', 1, 420, 0, 420, 'active');
 
   -- ============================================
   -- BOYS FORM — 12-14 (4 belt ranks)
-  -- Max 5 Minutes, 1 Round
+  -- Max 7 Minutes, 1 Round
   -- ============================================
   INSERT INTO events (tournament_id, name, category, gender, age_group, belt_rank, rounds, round_duration_seconds, break_duration_seconds, timer_duration_seconds, status) VALUES
-  (v_tid, 'Boys 12-14 — Form — White to Yellow Belt', 'form_bon_kata', 'male', 'kids_12_14', 'White to Yellow Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Boys 12-14 — Form — Green to Blue Belt', 'form_bon_kata', 'male', 'kids_12_14', 'Green to Blue Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Boys 12-14 — Form — Brown Belt', 'form_bon_kata', 'male', 'kids_12_14', 'Brown Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Boys 12-14 — Form — Black Belt', 'form_bon_kata', 'male', 'kids_12_14', 'Black Belt', 1, 300, 0, 300, 'active');
+  (v_tid, 'Boys 12-14 — Form — White to Yellow Belt', 'form_bon_kata', 'male', 'kids_12_14', 'White to Yellow Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Boys 12-14 — Form — Green to Blue Belt', 'form_bon_kata', 'male', 'kids_12_14', 'Green to Blue Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Boys 12-14 — Form — Brown Belt', 'form_bon_kata', 'male', 'kids_12_14', 'Brown Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Boys 12-14 — Form — Black Belt', 'form_bon_kata', 'male', 'kids_12_14', 'Black Belt', 1, 420, 0, 420, 'active');
 
   -- ============================================
   -- BOYS FORM — 15-17 (4 belt ranks)
-  -- Max 5 Minutes, 1 Round
+  -- Max 7 Minutes, 1 Round
   -- ============================================
   INSERT INTO events (tournament_id, name, category, gender, age_group, belt_rank, rounds, round_duration_seconds, break_duration_seconds, timer_duration_seconds, status) VALUES
-  (v_tid, 'Boys 15-17 — Form — White to Yellow Belt', 'form_bon_kata', 'male', 'kids_15_17', 'White to Yellow Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Boys 15-17 — Form — Green to Blue Belt', 'form_bon_kata', 'male', 'kids_15_17', 'Green to Blue Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Boys 15-17 — Form — Brown Belt', 'form_bon_kata', 'male', 'kids_15_17', 'Brown Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Boys 15-17 — Form — Black Belt', 'form_bon_kata', 'male', 'kids_15_17', 'Black Belt', 1, 300, 0, 300, 'active');
+  (v_tid, 'Boys 15-17 — Form — White to Yellow Belt', 'form_bon_kata', 'male', 'kids_15_17', 'White to Yellow Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Boys 15-17 — Form — Green to Blue Belt', 'form_bon_kata', 'male', 'kids_15_17', 'Green to Blue Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Boys 15-17 — Form — Brown Belt', 'form_bon_kata', 'male', 'kids_15_17', 'Brown Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Boys 15-17 — Form — Black Belt', 'form_bon_kata', 'male', 'kids_15_17', 'Black Belt', 1, 420, 0, 420, 'active');
 
   -- ============================================
   -- GIRLS SPARRING — 9-11 (3 divisions)
@@ -243,33 +243,33 @@ BEGIN
 
   -- ============================================
   -- GIRLS FORM — 9-11 (4 belt ranks)
-  -- Max 5 Minutes, 1 Round
+  -- Max 7 Minutes, 1 Round
   -- ============================================
   INSERT INTO events (tournament_id, name, category, gender, age_group, belt_rank, rounds, round_duration_seconds, break_duration_seconds, timer_duration_seconds, status) VALUES
-  (v_tid, 'Girls 9-11 — Form — White to Yellow Belt', 'form_bon_kata', 'female', 'kids_9_11', 'White to Yellow Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Girls 9-11 — Form — Green to Blue Belt', 'form_bon_kata', 'female', 'kids_9_11', 'Green to Blue Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Girls 9-11 — Form — Brown Belt', 'form_bon_kata', 'female', 'kids_9_11', 'Brown Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Girls 9-11 — Form — Black Belt', 'form_bon_kata', 'female', 'kids_9_11', 'Black Belt', 1, 300, 0, 300, 'active');
+  (v_tid, 'Girls 9-11 — Form — White to Yellow Belt', 'form_bon_kata', 'female', 'kids_9_11', 'White to Yellow Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Girls 9-11 — Form — Green to Blue Belt', 'form_bon_kata', 'female', 'kids_9_11', 'Green to Blue Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Girls 9-11 — Form — Brown Belt', 'form_bon_kata', 'female', 'kids_9_11', 'Brown Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Girls 9-11 — Form — Black Belt', 'form_bon_kata', 'female', 'kids_9_11', 'Black Belt', 1, 420, 0, 420, 'active');
 
   -- ============================================
   -- GIRLS FORM — 12-14 (4 belt ranks)
-  -- Max 5 Minutes, 1 Round
+  -- Max 7 Minutes, 1 Round
   -- ============================================
   INSERT INTO events (tournament_id, name, category, gender, age_group, belt_rank, rounds, round_duration_seconds, break_duration_seconds, timer_duration_seconds, status) VALUES
-  (v_tid, 'Girls 12-14 — Form — White to Yellow Belt', 'form_bon_kata', 'female', 'kids_12_14', 'White to Yellow Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Girls 12-14 — Form — Green to Blue Belt', 'form_bon_kata', 'female', 'kids_12_14', 'Green to Blue Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Girls 12-14 — Form — Brown Belt', 'form_bon_kata', 'female', 'kids_12_14', 'Brown Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Girls 12-14 — Form — Black Belt', 'form_bon_kata', 'female', 'kids_12_14', 'Black Belt', 1, 300, 0, 300, 'active');
+  (v_tid, 'Girls 12-14 — Form — White to Yellow Belt', 'form_bon_kata', 'female', 'kids_12_14', 'White to Yellow Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Girls 12-14 — Form — Green to Blue Belt', 'form_bon_kata', 'female', 'kids_12_14', 'Green to Blue Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Girls 12-14 — Form — Brown Belt', 'form_bon_kata', 'female', 'kids_12_14', 'Brown Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Girls 12-14 — Form — Black Belt', 'form_bon_kata', 'female', 'kids_12_14', 'Black Belt', 1, 420, 0, 420, 'active');
 
   -- ============================================
   -- GIRLS FORM — 15-17 (4 belt ranks)
-  -- Max 5 Minutes, 1 Round
+  -- Max 7 Minutes, 1 Round
   -- ============================================
   INSERT INTO events (tournament_id, name, category, gender, age_group, belt_rank, rounds, round_duration_seconds, break_duration_seconds, timer_duration_seconds, status) VALUES
-  (v_tid, 'Girls 15-17 — Form — White to Yellow Belt', 'form_bon_kata', 'female', 'kids_15_17', 'White to Yellow Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Girls 15-17 — Form — Green to Blue Belt', 'form_bon_kata', 'female', 'kids_15_17', 'Green to Blue Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Girls 15-17 — Form — Brown Belt', 'form_bon_kata', 'female', 'kids_15_17', 'Brown Belt', 1, 300, 0, 300, 'active'),
-  (v_tid, 'Girls 15-17 — Form — Black Belt', 'form_bon_kata', 'female', 'kids_15_17', 'Black Belt', 1, 300, 0, 300, 'active');
+  (v_tid, 'Girls 15-17 — Form — White to Yellow Belt', 'form_bon_kata', 'female', 'kids_15_17', 'White to Yellow Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Girls 15-17 — Form — Green to Blue Belt', 'form_bon_kata', 'female', 'kids_15_17', 'Green to Blue Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Girls 15-17 — Form — Brown Belt', 'form_bon_kata', 'female', 'kids_15_17', 'Brown Belt', 1, 420, 0, 420, 'active'),
+  (v_tid, 'Girls 15-17 — Form — Black Belt', 'form_bon_kata', 'female', 'kids_15_17', 'Black Belt', 1, 420, 0, 420, 'active');
 
   -- Update descriptions
   UPDATE events SET description =
