@@ -15,6 +15,13 @@ interface EventRow {
   name: string;
   status: string | null;
   bracket_status: 'draft' | 'published' | null;
+  gender: string | null;
+  age_group: string | null;
+  division: string | null;
+  belt_rank: string | null;
+  rounds: number;
+  round_duration_seconds: number;
+  break_duration_seconds: number;
 }
 
 export default function DrawPage() {
@@ -26,7 +33,6 @@ export default function DrawPage() {
   const [selected, setSelected] = useState('');
   const [detail, setDetail] = useState<Match | null>(null);
   const [busy, setBusy] = useState(false);
-  const [totalRounds, setTotalRounds] = useState(1);
 
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -35,9 +41,12 @@ export default function DrawPage() {
     if (!tournament) return;
     const { data: evs } = await supabase
       .from('events')
-      .select('id, name, status, bracket_status')
+      .select('id, name, status, bracket_status, rounds, round_duration_seconds, break_duration_seconds, gender, age_group, division, belt_rank')
       .eq('tournament_id', tournament.id)
-      .order('created_at');
+      .order('gender')
+      .order('age_group')
+      .order('division')
+      .order('name');
     const evList = (evs ?? []) as EventRow[];
     setEvents(evList);
     const ids = evList.map((e) => e.id);
@@ -80,7 +89,11 @@ export default function DrawPage() {
     setError(null);
     setSuccessMsg(null);
     try {
-      const { lots, rounds } = generateBracket(selected, eventAthletes, totalRounds);
+      const { lots, rounds } = generateBracket(selected, eventAthletes, {
+        rounds: currentEvent?.rounds ?? 1,
+        round_duration_seconds: currentEvent?.round_duration_seconds ?? 120,
+        break_duration_seconds: currentEvent?.break_duration_seconds ?? 30,
+      });
 
       // 1. Delete existing matches
       const { error: delErr } = await supabase.from('matches').delete().eq('event_id', selected);
@@ -189,25 +202,19 @@ export default function DrawPage() {
           onChange={(e) => { setSelected(e.target.value); setError(null); setSuccessMsg(null); }}
         >
           <option value="">Select event…</option>
-          {events.map((ev) => (
-            <option key={ev.id} value={ev.id}>{ev.name}</option>
+          {Array.from(new Set(events.map(ev => `${ev.gender ?? 'Unspecified'} | ${ev.age_group ?? 'Any Age'} | ${ev.division ?? 'Open'}`))).map(group => (
+            <optgroup key={group} label={group}>
+              {events
+                .filter(ev => `${ev.gender ?? 'Unspecified'} | ${ev.age_group ?? 'Any Age'} | ${ev.division ?? 'Open'}` === group)
+                .map((ev) => (
+                  <option key={ev.id} value={ev.id}>{ev.name} {ev.belt_rank ? `(${ev.belt_rank})` : ''}</option>
+                ))}
+            </optgroup>
           ))}
         </select>
         {selected && (
           <>
             <span className="text-gray-400">{eventAthletes.length} athletes registered</span>
-            <label className="flex items-center gap-2 text-sm text-gray-300">
-              Rounds/match
-              <select
-                className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-2"
-                value={totalRounds}
-                onChange={(e) => setTotalRounds(Number(e.target.value))}
-              >
-                <option value={1}>1</option>
-                <option value={2}>2</option>
-                <option value={3}>3</option>
-              </select>
-            </label>
             <button disabled={busy} onClick={generate} className="rounded-lg bg-green-700 px-4 py-2 font-bold disabled:opacity-40">
               {busy ? 'Working…' : matches.length > 0 ? 'Re-draw' : 'Generate Draw'}
             </button>

@@ -107,7 +107,9 @@ export default function ControllerPage() {
       .maybeSingle();
     const m = (data as Match | null) ?? null;
     setMatch(m);
-    if (m && !runningRef.current) setRemaining(m.timer_seconds);
+    if (m && !runningRef.current) {
+      setRemaining(m.status === 'takedown' && m.timer_before_takedown != null ? m.timer_before_takedown : m.timer_seconds);
+    }
   }, [court, tournament?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadVotes = useCallback(async () => {
@@ -310,15 +312,10 @@ export default function ControllerPage() {
       takedownAutoPaused.current = false;
     }
     takedownHandled.current = null;
-    await supabase
-      .from('matches')
-      .update({ 
-        status: 'takedown',
-        timer_started_at: null,
-        timer_paused_at: new Date().toISOString(),
-        takedown_timer_seconds: TAKEDOWN_SECONDS
-      })
-      .eq('id', m.id);
+    await supabase.rpc('start_takedown', { 
+      p_match_id: m.id, 
+      p_current_timer: remainingRef.current 
+    });
     playTakedown();
     pushLog('TAKEDOWN window started (30s)');
   }
@@ -328,9 +325,12 @@ export default function ControllerPage() {
     if (!m) return;
     if (takedownAutoPaused.current) {
       takedownAutoPaused.current = false;
-      await startTimer(); // resume the match clock (status becomes live)
+      await supabase.rpc('end_takedown', { p_match_id: m.id });
+      // We also need to automatically start the timer to make it live and ticking
+      await startTimer();
     } else {
-      await supabase.from('matches').update({ status: 'paused', timer_paused_at: new Date().toISOString() }).eq('id', m.id);
+      await supabase.rpc('end_takedown', { p_match_id: m.id });
+      await pauseTimer(); // immediately pause it if it was paused before
     }
     pushLog('Takedown window ended');
   }
@@ -465,7 +465,7 @@ export default function ControllerPage() {
       )}
       {takedownActive && (
         <div className="flex animate-pulse items-center justify-center gap-4 rounded-xl bg-purple-600 p-3">
-          <span className="text-3xl font-black">TAKEDOWN &mdash; {formatTime(takedownRemaining)}</span>
+          <span className="text-3xl font-black">TAKEDOWN ONGOING</span>
           <button onClick={endTakedown} className="rounded-lg bg-black px-4 py-2 font-bold">End Takedown</button>
         </div>
       )}
@@ -529,7 +529,14 @@ export default function ControllerPage() {
 
       {/* Timer + special-state controls */}
       <div className="flex flex-wrap items-center justify-center gap-3 rounded-xl bg-gray-900 p-3">
-        <span className="font-mono text-6xl font-black tabular-nums">{formatTime(remaining)}</span>
+        {takedownActive ? (
+          <div className="flex flex-col pr-4 text-center">
+            <span className="font-mono text-2xl font-bold text-gray-400">Match: {formatTime(remaining)} (PAUSED)</span>
+            <span className="font-mono text-6xl font-black text-purple-400 tabular-nums">Takedown: {formatTime(takedownRemaining)}</span>
+          </div>
+        ) : (
+          <span className="font-mono text-6xl font-black tabular-nums">{formatTime(remaining)}</span>
+        )}
         <button disabled={running || breakActive} onClick={startTimer} className={`${btn} bg-green-700 px-6`}>Start</button>
         <button disabled={!running} onClick={pauseTimer} className={`${btn} bg-gray-700 px-6`}>Pause</button>
         <button disabled={breakActive} onClick={resetTimer} className={`${btn} bg-gray-700 px-6`}>Reset</button>

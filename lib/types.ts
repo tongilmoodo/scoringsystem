@@ -21,6 +21,10 @@ export interface EventRecord {
   gender: string;
   age_group: string;
   weight_class: string | null;
+  division: string | null;
+  belt_rank: string | null;
+  rounds: number;
+  round_duration_seconds: number;
   status: string;
   bracket_status: 'draft' | 'published';
 }
@@ -56,6 +60,7 @@ export interface Match {
   max_time: number;
   break_timer_seconds: number;
   takedown_timer_seconds: number;
+  timer_before_takedown?: number | null;
   timer_started_at: string | null;
   timer_paused_at?: string | null;
   total_rounds?: number;

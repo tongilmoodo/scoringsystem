@@ -13,6 +13,10 @@ import type { Athlete } from '@/lib/types';
 interface EventRow {
   id: string;
   name: string;
+  gender: string | null;
+  age_group: string | null;
+  division: string | null;
+  belt_rank: string | null;
 }
 
 interface PreviewRow {
@@ -40,9 +44,12 @@ export default function AthletesPage() {
     if (!tournament) return;
     const { data: evs } = await supabase
       .from('events')
-      .select('id, name')
+      .select('id, name, gender, age_group, division, belt_rank')
       .eq('tournament_id', tournament.id)
-      .order('created_at');
+      .order('gender')
+      .order('age_group')
+      .order('division')
+      .order('name');
     const evList = (evs ?? []) as EventRow[];
     setEvents(evList);
     const ids = evList.map((e) => e.id);
@@ -181,8 +188,14 @@ export default function AthletesPage() {
         </div>
         <select className={input} value={form.event_id} onChange={(e) => setForm({ ...form, event_id: e.target.value })}>
           <option value="">Event *</option>
-          {events.map((ev) => (
-            <option key={ev.id} value={ev.id}>{ev.name}</option>
+          {Array.from(new Set(events.map(ev => `${ev.gender ?? 'Unspecified'} | ${ev.age_group ?? 'Any Age'} | ${ev.division ?? 'Open'}`))).map(group => (
+            <optgroup key={group} label={group}>
+              {events
+                .filter(ev => `${ev.gender ?? 'Unspecified'} | ${ev.age_group ?? 'Any Age'} | ${ev.division ?? 'Open'}` === group)
+                .map((ev) => (
+                  <option key={ev.id} value={ev.id}>{ev.name} {ev.belt_rank ? `(${ev.belt_rank})` : ''}</option>
+                ))}
+            </optgroup>
           ))}
         </select>
         <input className={input} placeholder="Seed" type="number" value={form.seed} onChange={(e) => setForm({ ...form, seed: e.target.value })} />
