@@ -248,12 +248,25 @@ export default function DrawPage() {
       {detail && (
         <div className="rounded-xl border border-gray-700 bg-gray-900 p-4">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="font-bold">Match #{detail.match_number} · {ROUND_LABELS[detail.round]}</h2>
+            <h2 className="font-bold">Match #{detail.match_number} · {detail.red_athlete_id === null ? 'Solo Performance' : ROUND_LABELS[detail.round]}</h2>
             <button onClick={() => setDetail(null)} className="text-gray-400 underline">Close</button>
           </div>
-          <p><span className="text-blue-400">{detail.blue?.name ?? 'TBD'}</span> vs <span className="text-red-400">{detail.red?.name ?? 'TBD'}</span></p>
-          <p className="text-sm text-gray-400">
-            Status: {detail.status} · Score: {detail.blue_score} : {detail.red_score} · Fouls: {detail.blue_fouls} / {detail.red_fouls}
+          {detail.red_athlete_id === null ? (
+            // Form / Solo event detail
+            <div className="flex items-center gap-3">
+              <span className="text-blue-400 font-bold text-lg">{detail.blue?.name ?? 'TBD'}</span>
+              {detail.status === 'completed' && (
+                <span className="ml-auto font-mono text-2xl font-black text-white">
+                  {(detail.blue_score / 10).toFixed(1)}
+                </span>
+              )}
+            </div>
+          ) : (
+            // Sparring match detail
+            <p><span className="text-blue-400">{detail.blue?.name ?? 'TBD'}</span> vs <span className="text-red-400">{detail.red?.name ?? 'TBD'}</span></p>
+          )}
+          <p className="text-sm text-gray-400 mt-1">
+            Status: {detail.status}
             {detail.court_number ? ` · Court ${detail.court_number === 1 ? 'A' : 'B'}` : ''}
             {detail.win_method ? ` · Won by ${detail.win_method}` : ''}
           </p>

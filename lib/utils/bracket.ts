@@ -60,10 +60,15 @@ export function generateBracket(
   eventRules: { rounds: number; round_duration_seconds: number; break_duration_seconds: number }
 ) {
   const n = athletes.length;
-  if (n < 2) throw new Error('Need at least 2 athletes');
 
   const isFormEvent =
     eventCategory.includes('form_bon_kata') || eventCategory.includes('special_techniques');
+
+  if (isFormEvent) {
+    if (n < 1) throw new Error('Need at least 1 athlete for a Form event');
+  } else {
+    if (n < 2) throw new Error('Need at least 2 athletes');
+  }
 
   if (isFormEvent) {
     // Solo performance mode: 1 match per athlete, in random order, no red side
