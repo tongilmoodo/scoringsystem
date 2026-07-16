@@ -8,7 +8,7 @@
 --
 --   Adult sparring (kumite):   2 rounds × 120s, 30s break
 --   Kids sparring (kumite):    1 round  × 120s, 0s break
---   Form / Bon / Kata:         1 round  × 300s, 0s break  (max 5 min)
+--   Form / Bon / Kata:         1 round  × 420s, 0s break  (max 7 min)
 --   Special Techniques:        1 round  × 420s, 0s break  (max 7 min)
 --   Team Sparring (5-person):  2 rounds × 120s, 30s break
 --   Team Form / Bon / Kata:    1 round  × 420s, 0s break  (max 7 min)

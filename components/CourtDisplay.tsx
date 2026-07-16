@@ -6,6 +6,9 @@ import { useTranslation } from '@/lib/i18n';
 import { getFlagUrl, countryName } from '@/lib/countries';
 import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match, type Side } from '@/lib/types';
 import { audio } from '@/lib/audio';
+import FormScoreboard from '@/components/FormScoreboard';
+
+const FORM_CATEGORIES = ['form_bon_kata', 'special_techniques', 'team_form_bon_kata', 'team_special_techniques'];
 
 const LABELS = ['Court', 'Match', 'No active match', 'Fouls', 'Round Break', 'Round', 'Waiting for match assignment'];
 
@@ -122,6 +125,12 @@ export default function CourtDisplay({
         <p className="mt-4 text-text-muted">{t('No active match')}</p>
       </div>
     );
+  }
+
+  // Route Form / Special Techniques events to the solo leaderboard scoreboard
+  const category = match.events?.category ?? '';
+  if (FORM_CATEGORIES.some((c) => category.includes(c))) {
+    return <FormScoreboard court={court} tournamentId={tournamentId} big={big} />;
   }
 
   const breakActive = match.status === 'break';
