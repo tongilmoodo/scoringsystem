@@ -55,11 +55,52 @@ function shuffle<T>(arr: T[]): T[] {
  */
 export function generateBracket(
   eventId: string,
+  eventCategory: string,
   athletes: Athlete[],
   eventRules: { rounds: number; round_duration_seconds: number; break_duration_seconds: number }
 ) {
   const n = athletes.length;
   if (n < 2) throw new Error('Need at least 2 athletes');
+
+  const isFormEvent =
+    eventCategory.includes('form_bon_kata') || eventCategory.includes('special_techniques');
+
+  if (isFormEvent) {
+    // Solo performance mode: 1 match per athlete, in random order, no red side
+    const ordered = shuffle([...athletes]);
+    const lots: { id: string; lot_number: number }[] = ordered.map((a, i) => ({
+      id: a.id,
+      lot_number: i + 1,
+    }));
+    const rounds: DrawMatchRow[][] = [
+      ordered.map((a, i) => ({
+        id: crypto.randomUUID(),
+        event_id: eventId,
+        court_number: null,
+        round: 'final' as Round, // Treat as final round for simplicity
+        match_number: i + 1,
+        current_round: 1,
+        total_rounds: eventRules.rounds,
+        blue_athlete_id: a.id,
+        red_athlete_id: null,
+        blue_score: 0,
+        red_score: 0,
+        blue_fouls: 0,
+        red_fouls: 0,
+        status: 'scheduled',
+        winner_id: null,
+        win_method: null,
+        timer_seconds: eventRules.round_duration_seconds,
+        max_time: eventRules.round_duration_seconds,
+        break_timer_seconds: eventRules.break_duration_seconds,
+        takedown_timer_seconds: 30,
+        next_match_id: null,
+        next_match_position: null,
+      })),
+    ];
+    return { rounds, lots };
+  }
+
   if (n > 16) throw new Error('Maximum 16 athletes per bracket');
   const size = n <= 2 ? 2 : n <= 4 ? 4 : n <= 8 ? 8 : 16;
   const byes = size - n;

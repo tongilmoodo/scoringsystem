@@ -14,6 +14,7 @@ interface EventRow {
   id: string;
   name: string;
   status: string | null;
+  category: string;
   bracket_status: 'draft' | 'published' | null;
   gender: string | null;
   age_group: string | null;
@@ -41,7 +42,7 @@ export default function DrawPage() {
     if (!tournament) return;
     const { data: evs, error: evErr } = await supabase
       .from('events')
-      .select('id, name, status, bracket_status, rounds, round_duration_seconds, break_duration_seconds, gender, age_group, division, belt_rank')
+      .select('id, name, category, status, bracket_status, rounds, round_duration_seconds, break_duration_seconds, gender, age_group, division, belt_rank')
       .eq('tournament_id', tournament.id)
       .order('gender')
       .order('age_group')
@@ -92,10 +93,14 @@ export default function DrawPage() {
     setError(null);
     setSuccessMsg(null);
     try {
-      const { lots, rounds } = generateBracket(selected, eventAthletes, {
-        rounds: currentEvent?.rounds ?? 1,
-        round_duration_seconds: currentEvent?.round_duration_seconds ?? 120,
-        break_duration_seconds: currentEvent?.break_duration_seconds ?? 30,
+      const ev = events.find((e) => e.id === selected);
+      if (!ev) throw new Error('Event not found');
+
+      const eventAthletes = athletes.filter((a) => a.event_id === selected);
+      const { lots, rounds } = generateBracket(selected, ev.category, eventAthletes, {
+        rounds: ev.rounds,
+        round_duration_seconds: ev.round_duration_seconds,
+        break_duration_seconds: ev.break_duration_seconds,
       });
 
       // 1. Delete existing matches
