@@ -203,8 +203,6 @@ export default function DrawPage() {
             setSelected(e.target.value);
             setError(null);
             setSuccessMsg(null);
-            const ev = events.find((x) => x.id === e.target.value);
-            if (ev?.rounds) setTotalRounds(ev.rounds);
           }}
         >
           <option value="">Select event…</option>
