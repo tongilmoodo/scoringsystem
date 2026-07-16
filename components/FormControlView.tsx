@@ -1,25 +1,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Flag from '@/components/Flag';
-import { formatTime, type Match, type User } from '@/lib/types';
+import { type Match } from '@/lib/types';
 import { ConnectionDot } from '@/components/ui/StatusBadge';
+import { type AppUser } from '@/lib/useAuth';
 
 export default function FormControlView({
   match,
   user,
   tournament,
   court,
-  online,
   logout,
 }: {
   match: Match;
-  user: User;
+  user: AppUser | null;
   tournament: any;
   court: number;
-  online: boolean;
   logout: () => void;
 }) {
-  const [scores, setScores] = useState<any[]>([]);
+  const online = typeof navigator !== 'undefined' ? navigator.onLine : true;
+  const [scores, setScores] = useState<any[]>([]); 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +54,7 @@ export default function FormControlView({
     try {
       const { data, error: err } = await supabase.rpc('commit_form_average', {
         p_match_id: match.id,
-        p_controller_name: user.name,
+        p_controller_name: user?.name ?? 'controller',
       });
       if (err) throw err;
       if (!data.success) throw new Error(data.message || 'Failed to commit average');
@@ -80,7 +80,7 @@ export default function FormControlView({
         <span className={online ? 'text-success' : 'font-bold text-warning'}>
           {online ? 'Online' : 'Offline'}
         </span>
-        <button onClick={logout} className="text-gray-400 underline">{user.name}</button>
+        <button onClick={logout} className="text-gray-400 underline">{user?.name}</button>
       </div>
 
       <div className="flex flex-1 flex-col gap-3">

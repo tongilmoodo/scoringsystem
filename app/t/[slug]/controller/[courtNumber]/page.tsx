@@ -235,7 +235,6 @@ export default function ControllerPage() {
         user={user} 
         tournament={tournament} 
         court={court} 
-        online={online} 
         logout={logout} 
       />
     );

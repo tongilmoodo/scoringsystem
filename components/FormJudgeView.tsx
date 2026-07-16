@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Flag from '@/components/Flag';
-import { formatTime, type Match, type User } from '@/lib/types';
+import { type Match } from '@/lib/types';
 import { ConnectionDot } from '@/components/ui/StatusBadge';
+import { type AppUser } from '@/lib/useAuth';
 
 export default function FormJudgeView({
   match,
@@ -13,7 +14,7 @@ export default function FormJudgeView({
   logout,
 }: {
   match: Match;
-  user: User;
+  user: AppUser | null;
   tournament: any;
   court: number;
   online: boolean;
@@ -40,7 +41,7 @@ export default function FormJudgeView({
     try {
       const { data, error: err } = await supabase.rpc('submit_form_score', {
         p_match_id: match.id,
-        p_judge_id: user.id,
+        p_judge_id: user?.id,
         p_score: score,
       });
       if (err) throw err;
@@ -64,7 +65,7 @@ export default function FormJudgeView({
         <span className={online ? 'text-success' : 'font-bold text-warning'}>
           {online ? 'Online' : 'Offline'}
         </span>
-        <button onClick={logout} className="text-gray-400 underline">{user.name}</button>
+        <button onClick={logout} className="text-gray-400 underline">{user?.name}</button>
       </div>
 
       <div className="flex flex-1 flex-col gap-3">
