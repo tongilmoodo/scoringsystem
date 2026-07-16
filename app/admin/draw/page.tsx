@@ -15,6 +15,9 @@ interface EventRow {
   name: string;
   status: string | null;
   bracket_status: 'draft' | 'published' | null;
+  rounds: number | null;
+  round_duration_seconds: number | null;
+  break_duration_seconds: number | null;
 }
 
 export default function DrawPage() {
@@ -35,7 +38,7 @@ export default function DrawPage() {
     if (!tournament) return;
     const { data: evs } = await supabase
       .from('events')
-      .select('id, name, status, bracket_status')
+      .select('id, name, status, bracket_status, rounds, round_duration_seconds, break_duration_seconds')
       .eq('tournament_id', tournament.id)
       .order('created_at');
     const evList = (evs ?? []) as EventRow[];
@@ -80,7 +83,14 @@ export default function DrawPage() {
     setError(null);
     setSuccessMsg(null);
     try {
-      const { lots, rounds } = generateBracket(selected, eventAthletes, totalRounds);
+      const ev = events.find((e) => e.id === selected);
+      const { lots, rounds } = generateBracket(
+        selected,
+        eventAthletes,
+        totalRounds,
+        ev?.round_duration_seconds ?? 180,
+        ev?.break_duration_seconds ?? 30,
+      );
 
       // 1. Delete existing matches
       const { error: delErr } = await supabase.from('matches').delete().eq('event_id', selected);
@@ -186,7 +196,13 @@ export default function DrawPage() {
         <select
           className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2"
           value={selected}
-          onChange={(e) => { setSelected(e.target.value); setError(null); setSuccessMsg(null); }}
+          onChange={(e) => {
+            setSelected(e.target.value);
+            setError(null);
+            setSuccessMsg(null);
+            const ev = events.find((x) => x.id === e.target.value);
+            if (ev?.rounds) setTotalRounds(ev.rounds);
+          }}
         >
           <option value="">Select event…</option>
           {events.map((ev) => (
