@@ -65,14 +65,39 @@ export default function ResultsPage() {
     medalMap[country] = medalMap[country] ?? { country, gold: 0, silver: 0, bronze: 0 };
     medalMap[country][key] += 1;
   };
-  completed.forEach((m) => {
-    if (!m.winner_id) return;
-    if (m.round === 'final') {
-      add(winnerOf(m)?.country_code, 'gold');
-      add(loserOf(m)?.country_code, 'silver');
+
+  // Group matches by event
+  const byEvent = completed.reduce((acc, m) => {
+    acc[m.event_id] = acc[m.event_id] ?? [];
+    acc[m.event_id].push(m);
+    return acc;
+  }, {} as Record<string, Match[]>);
+
+  Object.values(byEvent).forEach((matches) => {
+    const isForm = matches.some((m) => m.event?.category.includes('form_bon_kata') || m.event?.category.includes('special_techniques'));
+    
+    if (isForm) {
+      // Rank by blue_score descending
+      const ranked = [...matches].sort((a, b) => b.blue_score - a.blue_score);
+      if (ranked[0]) add(ranked[0].blue?.country_code, 'gold');
+      if (ranked[1]) add(ranked[1].blue?.country_code, 'silver');
+      if (ranked[2]) add(ranked[2].blue?.country_code, 'bronze');
+      // What if there is a tie? For now, just strict array index.
+    } else {
+      // Standard bracket logic
+      matches.forEach((m) => {
+        if (!m.winner_id) return;
+        if (m.round === 'final') {
+          add(winnerOf(m)?.country_code, 'gold');
+          add(loserOf(m)?.country_code, 'silver');
+        }
+        if (m.round === 'semi_final') {
+          add(loserOf(m)?.country_code, 'bronze');
+        }
+      });
     }
-    if (m.round === 'semi_final') add(loserOf(m)?.country_code, 'bronze');
   });
+
   const medals = Object.values(medalMap).sort(
     (a, b) => b.gold - a.gold || b.silver - a.silver || b.bronze - a.bronze
   );
