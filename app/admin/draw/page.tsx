@@ -83,11 +83,18 @@ export default function DrawPage() {
   const currentEvent = events.find((e) => e.id === selected);
 
   async function generate() {
-    if (!selected) return;
-    if (eventAthletes.length < 2) {
+    if (!selected || !currentEvent) return;
+    
+    const isFormEvent = currentEvent.category.includes('form_bon_kata') || currentEvent.category.includes('special_techniques');
+    
+    if (isFormEvent && eventAthletes.length < 1) {
+      setError('This event needs at least 1 athlete registered before generating a draw.');
+      return;
+    } else if (!isFormEvent && eventAthletes.length < 2) {
       setError('This event needs at least 2 athletes registered before generating a draw.');
       return;
     }
+    
     if (matches.length > 0 && !confirm('An existing bracket will be deleted and re-drawn. Continue?')) return;
     setBusy(true);
     setError(null);
@@ -137,6 +144,35 @@ export default function DrawPage() {
       const msg = err instanceof Error ? err.message : String(err);
       setError(`Draw generation failed: ${msg}`);
       console.error('[generate draw]', err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function clearBracket() {
+    if (!selected) return;
+    if (!confirm('Are you sure you want to completely delete all matches for this event? This cannot be undone.')) return;
+    setBusy(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      // 1. Delete existing matches
+      const { error: delErr } = await supabase.from('matches').delete().eq('event_id', selected);
+      if (delErr) throw new Error(`Delete matches failed: ${delErr.message}`);
+
+      // 2. Reset event bracket status
+      const { error: evErr } = await supabase.from('events').update({ bracket_status: null }).eq('id', selected);
+      if (evErr) throw new Error(`Status update failed: ${evErr.message}`);
+
+      // 3. Clear lot numbers from athletes
+      const { error: lotErr } = await supabase.from('athletes').update({ lot_number: null }).eq('event_id', selected);
+      if (lotErr) console.error('Failed to clear lot numbers:', lotErr);
+
+      await loadMatches();
+      await load(); // refresh event status
+      setSuccessMsg('Bracket deleted successfully.');
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setBusy(false);
     }
@@ -231,9 +267,14 @@ export default function DrawPage() {
               {busy ? 'Working…' : matches.length > 0 ? 'Re-draw' : 'Generate Draw'}
             </button>
             {matches.length > 0 && (
-              <button onClick={publish} className="rounded-lg bg-blue-700 px-4 py-2 font-bold">
-                {currentEvent?.bracket_status === 'published' ? 'Published ✓' : 'Publish Bracket'}
-              </button>
+              <>
+                <button onClick={publish} className="rounded-lg bg-blue-700 px-4 py-2 font-bold">
+                  {currentEvent?.bracket_status === 'published' ? 'Published ✓' : 'Publish Bracket'}
+                </button>
+                <button disabled={busy} onClick={clearBracket} className="rounded-lg bg-red-800 px-4 py-2 font-bold disabled:opacity-40 ml-auto">
+                  Clear Bracket
+                </button>
+              </>
             )}
           </>
         )}
