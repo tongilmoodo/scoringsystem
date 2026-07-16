@@ -53,7 +53,7 @@ export default function CourtDisplay({
       .select(ATHLETE_SELECT)
       .in('event_id', evIds)
       .eq('court_number', court)
-      .in('status', ['assigned', 'live', 'paused', 'break', 'takedown', 'completed'])
+      .in('status', ['assigned', 'live', 'paused', 'break', 'takedown'])
       .order('match_number')
       .limit(1)
       .maybeSingle();

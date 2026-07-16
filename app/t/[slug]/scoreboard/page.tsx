@@ -17,6 +17,9 @@ export default function ScoreboardPage() {
 
   // Resolve the current event name shown on each court's active match.
   useEffect(() => {
+    // NEVER read match ID from cache on public scoreboard
+    if (typeof window !== 'undefined') localStorage.removeItem('scoreboard_match_id');
+
     if (!tournament) return;
     supabase
       .from('events')

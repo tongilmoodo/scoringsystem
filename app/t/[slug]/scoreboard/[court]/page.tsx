@@ -6,12 +6,18 @@ import { useTournamentBySlug } from '@/lib/useTournament';
 import { useLoadTimeout } from '@/lib/loadState';
 import LoadFallback from '@/components/ui/LoadFallback';
 
+import { useEffect } from 'react';
+
 export default function SingleCourtScoreboard() {
   const params = useParams();
   const slug = String(params.slug);
   const court = Number(params.court) === 2 ? 2 : 1;
   const { tournament, loading, error, retry, attempt } = useTournamentBySlug(slug);
   const timedOut = useLoadTimeout(loading ? 'loading' : 'ready', attempt);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') localStorage.removeItem('scoreboard_match_id');
+  }, []);
 
   if (loading && !timedOut && !error) {
     return <LoadFallback timedOut={false} onRetry={retry} />;

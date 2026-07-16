@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import CourtDisplay from '@/components/CourtDisplay';
 import { formatSupabaseError, useLoadTimeout } from '@/lib/loadState';
@@ -19,6 +20,9 @@ export default function PublicScoreboard() {
   const [eventNames, setEventNames] = useState<Record<number, string>>({});
 
   useEffect(() => {
+    // NEVER read match ID from cache on public scoreboard
+    if (typeof window !== 'undefined') localStorage.removeItem('scoreboard_match_id');
+
     async function detect() {
       // Prefer a live tournament; fall back to the most recent one with an active match.
       const { data: live, error: qErr } = await supabase
@@ -104,10 +108,18 @@ export default function PublicScoreboard() {
           <CourtDisplay key={c} court={c} tournamentId={tournament.id} eventName={eventNames[c]} />
         ))}
       </div>
-      {/* Tournament name only as small muted text below the scores. */}
-      <p className="text-center text-sm text-text-muted">
-        {tournament.name}{tournament.location ? ` \u00b7 ${tournament.location}` : ''}
-      </p>
+      {/* Tournament name + nav links */}
+      <div className="flex items-center justify-between px-2">
+        <p className="text-sm text-text-muted">
+          {tournament.name}{tournament.location ? ` · ${tournament.location}` : ''}
+        </p>
+        <Link
+          href="/upcoming"
+          className="rounded-lg bg-white/10 px-3 py-1 text-sm font-bold text-white/70 hover:bg-white/20 hover:text-white transition"
+        >
+          📅 Upcoming Matches
+        </Link>
+      </div>
     </main>
   );
 }

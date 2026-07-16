@@ -51,7 +51,7 @@ export interface Match {
   red_fouls: number;
   status: 'scheduled' | 'assigned' | 'live' | 'paused' | 'break' | 'takedown' | 'completed';
   winner_id: string | null;
-  win_method: 'points' | 'ko' | 'disqualification' | 'withdrawal' | 'forfeit' | null;
+  win_method: 'points' | 'ko' | 'tko' | 'disqualification' | 'withdrawal' | 'forfeit' | null;
   timer_seconds: number;
   max_time: number;
   break_timer_seconds: number;
@@ -64,6 +64,7 @@ export interface Match {
   ended_at?: string | null;
   updated_at?: string | null;
   tournament_id?: string | null;
+  tko_available?: boolean | null;
   next_match_id: string | null;
   next_match_position: Side | null;
   blue?: Athlete | null;

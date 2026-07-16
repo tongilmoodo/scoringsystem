@@ -19,6 +19,9 @@ export default function PublicSingleCourt() {
   const retry = () => setAttempt((n) => n + 1);
 
   useEffect(() => {
+    // NEVER read match ID from cache on public scoreboard
+    if (typeof window !== 'undefined') localStorage.removeItem('scoreboard_match_id');
+
     let cancelled = false;
     setLoading(true);
     setError(null);

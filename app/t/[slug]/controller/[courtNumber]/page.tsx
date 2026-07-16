@@ -28,7 +28,7 @@ import {
 } from '@/lib/types';
 
 const ACTIONS: ScoreActionType[] = ['point_1', 'point_2', 'point_3', 'foul'];
-const WIN_METHODS = ['points', 'ko', 'disqualification', 'withdrawal', 'forfeit'] as const;
+const WIN_METHODS = ['points', 'ko', 'tko', 'disqualification', 'withdrawal', 'forfeit'] as const;
 const MAX_FOULS = 3;
 const TAKEDOWN_SECONDS = 30;
 
@@ -61,6 +61,7 @@ export default function ControllerPage() {
   const [manualSide, setManualSide] = useState<Side | null>(null);
   const [dqSide, setDqSide] = useState<Side | null>(null);
   const [dqDismissed, setDqDismissed] = useState<Record<Side, boolean>>({ blue: false, red: false });
+  const [tkoDismissed, setTkoDismissed] = useState(false);
   const [log, setLog] = useState<string[]>([]);
 
   const matchRef = useRef<Match | null>(null);
@@ -169,6 +170,7 @@ export default function ControllerPage() {
 
   useEffect(() => {
     setDqDismissed({ blue: false, red: false });
+    setTkoDismissed(false);
   }, [match?.id]);
 
   useEffect(() => {
@@ -467,6 +469,35 @@ export default function ControllerPage() {
           <button onClick={endTakedown} className="rounded-lg bg-black px-4 py-2 font-bold">End Takedown</button>
         </div>
       )}
+
+      {/* 8-Point TKO Gap Banner */}
+      {match.tko_available && !tkoDismissed && match.status !== 'completed' && (() => {
+        const leadingSide: Side = match.blue_score >= match.red_score ? 'blue' : 'red';
+        const leadingName = leadingSide === 'blue' ? match.blue?.name : match.red?.name;
+        const gap = Math.abs(match.blue_score - match.red_score);
+        return (
+          <div className="flex animate-pulse items-center justify-between gap-4 rounded-xl bg-orange-600 p-3">
+            <div>
+              <p className="text-2xl font-black">⚠️ 8-POINT GAP DETECTED</p>
+              <p className="text-orange-100">{leadingName ?? leadingSide.toUpperCase()} leads by {gap} points</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setWinDialog(leadingSide); }}
+                className="rounded-lg bg-white px-4 py-2 font-black text-orange-700"
+              >
+                Declare TKO
+              </button>
+              <button
+                onClick={() => setTkoDismissed(true)}
+                className="rounded-lg bg-black/40 px-4 py-2 font-bold"
+              >
+                Continue Match
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Athlete panels with vote monitor */}
       <div className="grid flex-1 grid-cols-2 gap-3">
