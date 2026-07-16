@@ -113,22 +113,21 @@ function MatchesContent() {
   }
 
   async function resetMatch(m: Match) {
-    if (!confirm(`Reset match #${m.match_number}? All scores will be cleared.`)) return;
-    await supabase.from('score_events').delete().eq('match_id', m.id);
-    await supabase
-      .from('matches')
-      .update({
-        blue_score: 0,
-        red_score: 0,
-        blue_fouls: 0,
-        red_fouls: 0,
-        status: 'scheduled',
-        winner_id: null,
-        win_method: null,
-        timer_seconds: m.max_time,
-        timer_started_at: null,
-      })
-      .eq('id', m.id);
+    if (!confirm(`Reset match #${m.match_number}? Scores, fouls, votes, rounds, and timers will all be cleared.`)) return;
+    // Server-side RPC resets everything atomically: scores, fouls, winner,
+    // current_round, round_scores, TKO flag, timer/takedown/break state,
+    // and deletes score_events + judge_votes.
+    const { data, error } = await supabase.rpc('reset_match', { p_match_id: m.id });
+    if (error) {
+      alert(`Reset failed: ${error.message}`);
+      return;
+    }
+    const res = data as { success?: boolean; error?: string } | null;
+    if (res && res.success === false) {
+      alert(res.error ?? 'Reset failed');
+      return;
+    }
+    await supabase.rpc('append_match_audit', { p_match_id: m.id, p_action: 'match_reset', p_user: 'admin', p_note: 'full reset' });
   }
 
   function toggleGroup(eventId: string) {

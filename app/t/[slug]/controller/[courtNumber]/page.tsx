@@ -305,17 +305,35 @@ export default function ControllerPage() {
   async function startTakedown() {
     const m = matchRef.current;
     if (!m) return;
-    if (runningRef.current) {
+    const wasRunning = runningRef.current;
+    if (wasRunning) {
       takedownAutoPaused.current = true;
       setRunning(false);
     } else {
       takedownAutoPaused.current = false;
     }
     takedownHandled.current = null;
-    await supabase.rpc('start_takedown', { 
-      p_match_id: m.id, 
-      p_current_timer: remainingRef.current 
-    });
+    const { error } = await supabase
+      .from('matches')
+      .update({ 
+        status: 'takedown',
+        timer_started_at: null,
+        timer_paused_at: new Date().toISOString(),
+        // Persist the exact current second. Without this, the realtime
+        // reload in loadMatch() restores the stale timer_seconds written
+        // at Start (max_time), resetting the clock to 3:00.
+        timer_seconds: remainingRef.current,
+        timer_before_takedown: remainingRef.current,
+        takedown_timer_seconds: TAKEDOWN_SECONDS
+      })
+      .eq('id', m.id);
+    if (error) {
+      // Surface silent failures (RLS / expired session) instead of doing nothing.
+      takedownAutoPaused.current = false;
+      if (wasRunning) setRunning(true);
+      pushLog(`Takedown failed: ${error.message}`);
+      return;
+    }
     playTakedown();
     pushLog('TAKEDOWN window started (30s)');
   }
@@ -330,12 +348,20 @@ export default function ControllerPage() {
     remainingRef.current = saved;
     if (takedownAutoPaused.current) {
       takedownAutoPaused.current = false;
-      await supabase.rpc('end_takedown', { p_match_id: m.id });
-      // We also need to automatically start the timer to make it live and ticking
-      await startTimer();
+      setRunning(true);
+      playTimerStart();
+      audio.playMatchStart();
+      const { error } = await supabase
+        .from('matches')
+        .update({ status: 'live', timer_started_at: new Date().toISOString(), timer_paused_at: null, timer_seconds: saved, timer_before_takedown: null })
+        .eq('id', m.id);
+      if (error) { setRunning(false); pushLog(`End takedown failed: ${error.message}`); return; }
     } else {
-      await supabase.rpc('end_takedown', { p_match_id: m.id });
-      await pauseTimer(); // immediately pause it if it was paused before
+      const { error } = await supabase
+        .from('matches')
+        .update({ status: 'paused', timer_paused_at: new Date().toISOString(), timer_seconds: saved, timer_before_takedown: null })
+        .eq('id', m.id);
+      if (error) { pushLog(`End takedown failed: ${error.message}`); return; }
     }
     pushLog(`Takedown window ended \u2014 resumed at ${formatTime(saved)}`);
   }
