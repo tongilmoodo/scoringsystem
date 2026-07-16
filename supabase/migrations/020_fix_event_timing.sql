@@ -35,12 +35,12 @@ SET rounds                 = 1,
 WHERE category = 'sparring_kumite'
   AND age_group IN ('kids_9_11', 'kids_12_14', 'kids_15_17', 'kids_all');
 
--- ---- Form / Bon / Kata (all ages) — max 5 min ----
+-- ---- Form / Bon / Kata (all ages) — max 7 min ----
 UPDATE events
 SET rounds                 = 1,
-    round_duration_seconds = 300,
+    round_duration_seconds = 420,
     break_duration_seconds = 0,
-    timer_duration_seconds = 300
+    timer_duration_seconds = 420
 WHERE category = 'form_bon_kata';
 
 -- ---- Individual Special Techniques — max 7 min ----
