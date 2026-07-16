@@ -25,6 +25,7 @@ export interface EventRecord {
   belt_rank: string | null;
   rounds: number;
   round_duration_seconds: number;
+  description?: string | null;
   status: string;
   bracket_status: 'draft' | 'published';
 }

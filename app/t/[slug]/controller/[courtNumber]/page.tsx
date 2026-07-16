@@ -323,6 +323,11 @@ export default function ControllerPage() {
   async function endTakedown() {
     const m = matchRef.current;
     if (!m) return;
+    // Restore the exact second saved when the takedown started; fall back
+    // to the local countdown value if the save slot is missing.
+    const saved = m.timer_before_takedown ?? remainingRef.current;
+    setRemaining(saved);
+    remainingRef.current = saved;
     if (takedownAutoPaused.current) {
       takedownAutoPaused.current = false;
       await supabase.rpc('end_takedown', { p_match_id: m.id });
@@ -332,7 +337,7 @@ export default function ControllerPage() {
       await supabase.rpc('end_takedown', { p_match_id: m.id });
       await pauseTimer(); // immediately pause it if it was paused before
     }
-    pushLog('Takedown window ended');
+    pushLog(`Takedown window ended \u2014 resumed at ${formatTime(saved)}`);
   }
 
   // Auto-revert when the takedown timer expires.
