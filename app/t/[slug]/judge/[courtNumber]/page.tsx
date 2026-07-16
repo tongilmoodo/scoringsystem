@@ -15,6 +15,7 @@ import PinPad from '@/components/PinPad';
 import Flag from '@/components/Flag';
 import BroadcastBanner from '@/components/BroadcastBanner';
 import { ConnectionDot } from '@/components/ui/StatusBadge';
+import FormJudgeView from '@/components/FormJudgeView';
 import {
   ATHLETE_SELECT,
   formatTime,
@@ -266,6 +267,21 @@ export default function JudgePage() {
 
   const btn = 'min-h-[120px] rounded-xl font-headline text-2xl font-bold transition active:scale-95 active:brightness-125 disabled:opacity-30 disabled:pointer-events-none';
   const judgesConnected = new Set(votes.map((v) => v.judge_id)).size;
+
+  const isFormEvent = match.event?.category.includes('form_bon_kata') || match.event?.category.includes('special_techniques');
+
+  if (isFormEvent) {
+    return (
+      <FormJudgeView 
+        match={match} 
+        user={user} 
+        tournament={tournament} 
+        court={court} 
+        online={online} 
+        logout={logout} 
+      />
+    );
+  }
 
   return (
     <main className="kiosk flex min-h-screen flex-col gap-3 bg-navy p-3">

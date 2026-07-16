@@ -76,6 +76,7 @@ export interface Match {
   blue?: Athlete | null;
   red?: Athlete | null;
   events?: EventRecord | null;
+  event?: { category: string } | null;
 }
 
 export interface JudgeVote {
@@ -164,7 +165,7 @@ export interface AuditEntry {
 }
 
 export const ATHLETE_SELECT =
-  '*, blue:athletes!matches_blue_athlete_id_fkey(*), red:athletes!matches_red_athlete_id_fkey(*)';
+  '*, blue:athletes!matches_blue_athlete_id_fkey(*), red:athletes!matches_red_athlete_id_fkey(*), events:events(*)';
 
 export function formatTime(s: number): string {
   const m = Math.floor(Math.max(0, s) / 60);
