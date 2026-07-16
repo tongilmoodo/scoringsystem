@@ -199,7 +199,13 @@ export default function DrawPage() {
         <select
           className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2"
           value={selected}
-          onChange={(e) => { setSelected(e.target.value); setError(null); setSuccessMsg(null); }}
+          onChange={(e) => {
+            setSelected(e.target.value);
+            setError(null);
+            setSuccessMsg(null);
+            const ev = events.find((x) => x.id === e.target.value);
+            if (ev?.rounds) setTotalRounds(ev.rounds);
+          }}
         >
           <option value="">Select event…</option>
           {Array.from(new Set(events.map(ev => `${ev.gender ?? 'Unspecified'} | ${ev.age_group ?? 'Any Age'} | ${ev.division ?? 'Open'}`))).map(group => (
