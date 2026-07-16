@@ -43,7 +43,7 @@ function MatchesContent() {
     
     const { data } = await supabase
       .from('matches')
-      .select(`${ATHLETE_SELECT}, events(name, category, weight_class)`)
+      .select(`${ATHLETE_SELECT}, events(name, category, weight_class, division)`)
       .in('event_id', eventIds)
       .order('match_number');
       
@@ -185,7 +185,7 @@ function MatchesContent() {
       <td className="p-3">{m.match_number}</td>
       {eventFilter && (
         <td className="p-3 text-xs text-gray-400">
-           {m.events ? `${m.events.name} · ${m.events.category} · ${m.events.weight_class ?? 'N/A'}` : 'Unknown'}
+           {m.events ? `${m.events.name} · ${m.events.category}` : 'Unknown'}
         </td>
       )}
       <td className="p-3">{ROUND_LABELS[m.round]}</td>
@@ -256,7 +256,7 @@ function MatchesContent() {
           >
             <option value="">All Events</option>
             {events.map((ev) => (
-              <option key={ev.id} value={ev.id}>{ev.name} &middot; {ev.category} &middot; {ev.weight_class ?? 'N/A'}</option>
+              <option key={ev.id} value={ev.id}>{ev.name} &middot; {ev.category} &middot; {ev.division ?? ev.weight_class ?? ''}</option>
             ))}
           </select>
           <select className={select} value={roundFilter} onChange={(e) => setRoundFilter(e.target.value)}>
