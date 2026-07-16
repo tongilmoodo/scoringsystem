@@ -303,14 +303,15 @@ export default function ControllerPage() {
   async function startTakedown() {
     const m = matchRef.current;
     if (!m) return;
-    if (runningRef.current) {
+    const wasRunning = runningRef.current;
+    if (wasRunning) {
       takedownAutoPaused.current = true;
       setRunning(false);
     } else {
       takedownAutoPaused.current = false;
     }
     takedownHandled.current = null;
-    await supabase
+    const { error } = await supabase
       .from('matches')
       .update({ 
         status: 'takedown',
@@ -324,6 +325,13 @@ export default function ControllerPage() {
         takedown_timer_seconds: TAKEDOWN_SECONDS
       })
       .eq('id', m.id);
+    if (error) {
+      // Surface silent failures (RLS / expired session) instead of doing nothing.
+      takedownAutoPaused.current = false;
+      if (wasRunning) setRunning(true);
+      pushLog(`Takedown failed: ${error.message}`);
+      return;
+    }
     playTakedown();
     pushLog('TAKEDOWN window started (30s)');
   }
@@ -341,15 +349,17 @@ export default function ControllerPage() {
       setRunning(true);
       playTimerStart();
       audio.playMatchStart();
-      await supabase
+      const { error } = await supabase
         .from('matches')
         .update({ status: 'live', timer_started_at: new Date().toISOString(), timer_paused_at: null, timer_seconds: saved, timer_before_takedown: null })
         .eq('id', m.id);
+      if (error) { setRunning(false); pushLog(`End takedown failed: ${error.message}`); return; }
     } else {
-      await supabase
+      const { error } = await supabase
         .from('matches')
         .update({ status: 'paused', timer_paused_at: new Date().toISOString(), timer_seconds: saved, timer_before_takedown: null })
         .eq('id', m.id);
+      if (error) { pushLog(`End takedown failed: ${error.message}`); return; }
     }
     pushLog(`Takedown window ended \u2014 resumed at ${formatTime(saved)}`);
   }
