@@ -316,6 +316,11 @@ export default function ControllerPage() {
         status: 'takedown',
         timer_started_at: null,
         timer_paused_at: new Date().toISOString(),
+        // Persist the exact current second. Without this, the realtime
+        // reload in loadMatch() restores the stale timer_seconds written
+        // at Start (max_time), resetting the clock to 3:00.
+        timer_seconds: remainingRef.current,
+        timer_before_takedown: remainingRef.current,
         takedown_timer_seconds: TAKEDOWN_SECONDS
       })
       .eq('id', m.id);
@@ -326,13 +331,27 @@ export default function ControllerPage() {
   async function endTakedown() {
     const m = matchRef.current;
     if (!m) return;
+    // Restore the exact second saved when the takedown started; fall back
+    // to the local countdown value if the save slot is missing.
+    const saved = m.timer_before_takedown ?? remainingRef.current;
+    setRemaining(saved);
+    remainingRef.current = saved;
     if (takedownAutoPaused.current) {
       takedownAutoPaused.current = false;
-      await startTimer(); // resume the match clock (status becomes live)
+      setRunning(true);
+      playTimerStart();
+      audio.playMatchStart();
+      await supabase
+        .from('matches')
+        .update({ status: 'live', timer_started_at: new Date().toISOString(), timer_paused_at: null, timer_seconds: saved, timer_before_takedown: null })
+        .eq('id', m.id);
     } else {
-      await supabase.from('matches').update({ status: 'paused', timer_paused_at: new Date().toISOString() }).eq('id', m.id);
+      await supabase
+        .from('matches')
+        .update({ status: 'paused', timer_paused_at: new Date().toISOString(), timer_seconds: saved, timer_before_takedown: null })
+        .eq('id', m.id);
     }
-    pushLog('Takedown window ended');
+    pushLog(`Takedown window ended \u2014 resumed at ${formatTime(saved)}`);
   }
 
   // Auto-revert when the takedown timer expires.
@@ -529,7 +548,8 @@ export default function ControllerPage() {
 
       {/* Timer + special-state controls */}
       <div className="flex flex-wrap items-center justify-center gap-3 rounded-xl bg-gray-900 p-3">
-        <span className="font-mono text-6xl font-black tabular-nums">{formatTime(remaining)}</span>
+        <span className={`font-mono text-6xl font-black tabular-nums ${takedownActive ? 'text-yellow-400' : ''}`}>{formatTime(remaining)}</span>
+        {takedownActive && <span className="text-xl font-black text-yellow-400">(PAUSED)</span>}
         <button disabled={running || breakActive} onClick={startTimer} className={`${btn} bg-green-700 px-6`}>Start</button>
         <button disabled={!running} onClick={pauseTimer} className={`${btn} bg-gray-700 px-6`}>Pause</button>
         <button disabled={breakActive} onClick={resetTimer} className={`${btn} bg-gray-700 px-6`}>Reset</button>

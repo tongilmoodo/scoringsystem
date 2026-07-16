@@ -19,6 +19,7 @@ interface UpcomingMatch {
     gender: string | null;
     age_group: string | null;
     weight_class: string | null;
+    description: string | null;
   } | null;
 }
 
@@ -129,7 +130,7 @@ export default function UpcomingMatchesView({
         id, match_number, status, event_id, court_number,
         blue_athlete:blue_athlete_id(name, country_code),
         red_athlete:red_athlete_id(name, country_code),
-        event:event_id(id, name, category, gender, age_group, weight_class)
+        event:event_id(id, name, category, gender, age_group, weight_class, description)
       `)
       .in('event_id', evIds)
       .in('status', ['scheduled', 'assigned', 'live', 'paused', 'break', 'takedown'])
@@ -236,6 +237,9 @@ export default function UpcomingMatchesView({
                     .filter(Boolean)
                     .join(' · ')}
                 </p>
+                {eventMeta.description && (
+                  <p className="text-sm md:text-base text-yellow-200/70">{eventMeta.description}</p>
+                )}
               </div>
             )}
 
