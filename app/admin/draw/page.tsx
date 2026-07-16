@@ -39,7 +39,7 @@ export default function DrawPage() {
 
   const load = useCallback(async () => {
     if (!tournament) return;
-    const { data: evs } = await supabase
+    const { data: evs, error: evErr } = await supabase
       .from('events')
       .select('id, name, status, bracket_status, rounds, round_duration_seconds, break_duration_seconds, gender, age_group, division, belt_rank')
       .eq('tournament_id', tournament.id)
@@ -47,6 +47,9 @@ export default function DrawPage() {
       .order('age_group')
       .order('division')
       .order('name');
+    if (evErr) {
+      console.error('[Draw] events load failed:', evErr.message, evErr.code, evErr.details);
+    }
     const evList = (evs ?? []) as EventRow[];
     setEvents(evList);
     const ids = evList.map((e) => e.id);
