@@ -228,7 +228,7 @@ export default function ControllerPage() {
     ? Math.max(0, match.takedown_timer_seconds - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
     : 0;
 
-  if (match && (match.event?.category.includes('form_bon_kata') || match.event?.category.includes('special_techniques'))) {
+  if (match && (match.events?.category.includes('form_bon_kata') || match.events?.category.includes('special_techniques'))) {
     return (
       <FormControlView 
         match={match} 

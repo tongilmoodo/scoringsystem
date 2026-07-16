@@ -17,8 +17,15 @@ CREATE TABLE IF NOT EXISTS form_scores (
   UNIQUE(match_id, judge_id)
 );
 
--- Realtime for the new table so the controller sees submissions instantly
-ALTER PUBLICATION supabase_realtime ADD TABLE form_scores;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'form_scores'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE form_scores;
+  END IF;
+END $$;
 
 -- RPC for judges to submit their final form score
 CREATE OR REPLACE FUNCTION submit_form_score(
