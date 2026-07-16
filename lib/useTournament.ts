@@ -22,13 +22,49 @@ export function useActiveTournament() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setState(JSON.parse(raw));
-    } catch {
-      /* ignore */
-    }
-    setReady(true);
+    let cancelled = false;
+    (async () => {
+      let cached: ActiveTournament | null = null;
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (raw) cached = JSON.parse(raw) as ActiveTournament;
+      } catch {
+        /* ignore */
+      }
+      if (!cached?.id) {
+        setReady(true);
+        return;
+      }
+      // Show the cached value immediately, then validate it against the DB.
+      // After a database reset the cached id no longer exists and every
+      // admin page would silently show nothing (no events, no athletes,
+      // no matches). Clear the cache in that case so the admin re-selects.
+      setState(cached);
+      try {
+        const { data, error } = await supabase
+          .from('tournaments')
+          .select('id, slug, name, courts_count, status, date, location')
+          .eq('id', cached.id)
+          .maybeSingle();
+        if (cancelled) return;
+        if (!error) {
+          if (data) {
+            localStorage.setItem(KEY, JSON.stringify(data));
+            setState(data as ActiveTournament);
+          } else {
+            localStorage.removeItem(KEY);
+            setState(null);
+          }
+        }
+      } catch {
+        /* network hiccup: keep the cached value */
+      } finally {
+        if (!cancelled) setReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function setTournament(t: ActiveTournament | null) {
