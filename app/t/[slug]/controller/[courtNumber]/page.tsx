@@ -16,6 +16,7 @@ import Flag from '@/components/Flag';
 import SoundToggle from '@/components/ui/SoundToggle';
 import BroadcastBanner from '@/components/BroadcastBanner';
 import { ConnectionDot, StatusBadge, type BadgeState } from '@/components/ui/StatusBadge';
+import FormControlView from '@/components/FormControlView';
 import {
   ACTION_LABELS,
   ATHLETE_SELECT,
@@ -226,6 +227,24 @@ export default function ControllerPage() {
   const takedownRemaining = takedownActive && match.timer_paused_at
     ? Math.max(0, match.takedown_timer_seconds - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
     : 0;
+
+  if (match && (match.event?.category.includes('form_bon_kata') || match.event?.category.includes('special_techniques'))) {
+    return (
+      <FormControlView 
+        match={match} 
+        user={user} 
+        tournament={tournament} 
+        court={court} 
+        online={online} 
+        logout={logout} 
+      />
+    );
+  }
+
+  // --- Derived Match State for Sparring ---
+  const roundRemaining = match?.timer_paused_at
+    ? Math.max(0, (match.timer_seconds ?? 0) - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
+    : (match?.timer_seconds ?? 0);
 
   async function startTimer() {
     const m = matchRef.current;
