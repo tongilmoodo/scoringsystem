@@ -75,7 +75,8 @@ export default function FormScoreboard({
     const evIds = (evRows ?? []).map((e: { id: string }) => e.id);
     if (!evIds.length) { setMatch(null); return; }
 
-    const { data } = await supabase
+    // 1. Try to find an active match
+    let { data } = await supabase
       .from('matches')
       .select(ATHLETE_SELECT)
       .in('event_id', evIds)
@@ -84,6 +85,20 @@ export default function FormScoreboard({
       .order('match_number')
       .limit(1)
       .maybeSingle();
+
+    // 2. Fallback to last completed match on this court
+    if (!data) {
+      const { data: completedData } = await supabase
+        .from('matches')
+        .select(ATHLETE_SELECT)
+        .in('event_id', evIds)
+        .eq('court_number', court)
+        .eq('status', 'completed')
+        .order('ended_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      data = completedData;
+    }
 
     const m = (data as Match | null) ?? null;
     setMatch(m);
