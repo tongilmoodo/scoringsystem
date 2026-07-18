@@ -101,6 +101,26 @@ export default function FormControlView({
       .eq('id', nextMatch.id);
   };
 
+  const [cooldown, setCooldown] = useState(0);
+  const [completionTime, setCompletionTime] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (match?.status === 'completed' && !completionTime) {
+      setCompletionTime(Date.now());
+    } else if (match?.status !== 'completed') {
+      setCompletionTime(null);
+    }
+  }, [match?.status, completionTime]);
+
+  useEffect(() => {
+    if (!completionTime) return;
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - completionTime) / 1000);
+      setCooldown(Math.max(0, 10 - elapsed));
+    }, 250);
+    return () => clearInterval(interval);
+  }, [completionTime]);
+
   const athlete = match.blue;
   const isCompleted = match.status === 'completed';
   const isLive = match.status === 'live' || match.status === 'assigned';
@@ -186,9 +206,16 @@ export default function FormControlView({
               {nextMatch ? (
                 <button
                   onClick={advanceToNextMatch}
-                  className="min-h-[100px] w-full rounded-xl bg-purple-600 hover:bg-purple-500 font-headline text-3xl font-bold transition animate-pulse"
+                  disabled={cooldown > 0}
+                  className={`min-h-[100px] w-full rounded-xl font-headline text-3xl font-bold transition ${
+                    cooldown > 0 
+                      ? 'bg-gray-600 cursor-not-allowed opacity-80' 
+                      : 'bg-purple-600 hover:bg-purple-500 animate-pulse'
+                  }`}
                 >
-                  ▶ NEXT ATHLETE: {(nextMatch as any).blue?.name ?? `Match ${nextMatch.match_number}`}
+                  {cooldown > 0 
+                    ? `WAIT FOR ANNOUNCEMENT (${cooldown}s)...` 
+                    : `▶ NEXT ATHLETE: ${(nextMatch as any).blue?.name ?? 'Next'}`}
                 </button>
               ) : (
                 <p className="text-gray-400 text-xl">No more athletes — event complete!</p>
