@@ -145,6 +145,8 @@ export default function FormScoreboard({
   const scoreSize = big ? 'text-[16vw] xl:text-[200px]' : 'text-9xl';
   const nameSize = big ? 'text-[3.5vw] xl:text-5xl' : 'text-3xl';
 
+  const isEventCompleted = leaderboard.length > 0 && leaderboard.every(r => r.completed);
+
   return (
     <div className="relative flex h-full flex-col overflow-hidden rounded-2xl bg-bg-dark p-4 md:p-8 gap-4">
       {/* Header */}
@@ -154,50 +156,74 @@ export default function FormScoreboard({
           {match.events?.name ?? 'Form / Special Techniques'}
         </span>
         <span className={`font-mono font-bold tabular-nums ${timerColor} ${big ? 'text-[5vw] xl:text-7xl' : 'text-4xl'}`}>
-          {formatTime(remaining)}
+          {!isEventCompleted ? formatTime(remaining) : ''}
         </span>
       </div>
 
-      {/* Currently performing athlete */}
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl bg-blue-900/40 p-6">
-        <TvFlag code={athlete?.country_code} height={big ? 80 : 50} />
-        <p className={`${nameSize} text-center font-headline font-bold uppercase tracking-[0.05em] text-[#4a90d9]`}>
-          {athlete?.name ?? 'TBD'}
-        </p>
-        <p className="text-text-muted uppercase tracking-widest text-lg">{athlete?.team ?? ''}</p>
-
-        <p className="text-text-muted uppercase tracking-widest text-sm mt-2">Current Score</p>
-        <span className={`${scoreSize} font-headline font-black tabular-nums score-shadow text-white`}>
-          {match.status === 'completed' ? (currentScore / 10).toFixed(1) : '—'}
-        </span>
-        {match.status !== 'completed' && (
-          <span className="text-text-muted text-xl">Performing…</span>
-        )}
-      </div>
-
-      {/* Leaderboard */}
-      {leaderboard.length > 0 && (
-        <div className="rounded-xl bg-black/30 p-4">
-          <p className="text-center text-xs uppercase tracking-widest text-text-muted mb-3">Leaderboard</p>
-          <div className="flex flex-col gap-2">
-            {leaderboard.slice(0, 6).map((row, i) => {
-              const isActive = row.athlete_id === match.blue_athlete_id && match.status !== 'completed';
-              return (
-                <div key={row.athlete_id ?? i}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${isActive ? 'bg-blue-700/50 ring-1 ring-blue-400' : 'bg-white/5'}`}>
-                  <span className="w-8 text-center font-bold text-gold text-lg">
-                    {row.completed ? (MEDALS[i] ?? `#${i + 1}`) : '—'}
+      {isEventCompleted ? (
+        <div className="flex flex-1 flex-col overflow-hidden rounded-xl bg-black/30 p-6">
+          <p className="text-center text-3xl uppercase tracking-widest text-gold mb-8 font-bold">Final Results</p>
+          <div className="flex-1 overflow-y-auto pr-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              {leaderboard.map((row, i) => (
+                <div key={row.athlete_id ?? i} className="flex items-center gap-4 rounded-xl bg-white/5 px-6 py-4 text-xl border border-white/5">
+                  <span className="w-12 text-center font-bold text-gold text-2xl">
+                    {MEDALS[i] ?? `#${i + 1}`}
                   </span>
-                  <TvFlag code={row.country_code} height={20} />
+                  <TvFlag code={row.country_code} height={32} />
                   <span className="flex-1 font-headline font-bold uppercase truncate">{row.athlete_name}</span>
-                  <span className="font-mono font-bold tabular-nums text-lg">
-                    {row.completed ? (row.score / 10).toFixed(1) : (isActive ? '…' : '--')}
+                  <span className="font-mono font-bold tabular-nums text-3xl text-white">
+                    {(row.score / 10).toFixed(1)}
                   </span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
+      ) : (
+        <>
+          {/* Currently performing athlete */}
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl bg-blue-900/40 p-6">
+            <TvFlag code={athlete?.country_code} height={big ? 80 : 50} />
+            <p className={`${nameSize} text-center font-headline font-bold uppercase tracking-[0.05em] text-[#4a90d9]`}>
+              {athlete?.name ?? 'TBD'}
+            </p>
+            <p className="text-text-muted uppercase tracking-widest text-lg">{athlete?.team ?? ''}</p>
+
+            <p className="text-text-muted uppercase tracking-widest text-sm mt-2">Current Score</p>
+            <span className={`${scoreSize} font-headline font-black tabular-nums score-shadow text-white`}>
+              {match.status === 'completed' ? (currentScore / 10).toFixed(1) : '—'}
+            </span>
+            {match.status !== 'completed' && (
+              <span className="text-text-muted text-xl">Performing…</span>
+            )}
+          </div>
+
+          {/* Leaderboard */}
+          {leaderboard.length > 0 && (
+            <div className="rounded-xl bg-black/30 p-4">
+              <p className="text-center text-xs uppercase tracking-widest text-text-muted mb-3">Leaderboard</p>
+              <div className="flex flex-col gap-2">
+                {leaderboard.slice(0, 6).map((row, i) => {
+                  const isActive = row.athlete_id === match.blue_athlete_id && match.status !== 'completed';
+                  return (
+                    <div key={row.athlete_id ?? i}
+                      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${isActive ? 'bg-blue-700/50 ring-1 ring-blue-400' : 'bg-white/5'}`}>
+                      <span className="w-8 text-center font-bold text-gold text-lg">
+                        {row.completed ? (MEDALS[i] ?? `#${i + 1}`) : '—'}
+                      </span>
+                      <TvFlag code={row.country_code} height={20} />
+                      <span className="flex-1 font-headline font-bold uppercase truncate">{row.athlete_name}</span>
+                      <span className="font-mono font-bold tabular-nums text-lg">
+                        {row.completed ? (row.score / 10).toFixed(1) : (isActive ? '…' : '--')}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
