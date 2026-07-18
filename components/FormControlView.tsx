@@ -71,7 +71,7 @@ export default function FormControlView({
     if (!match) return;
     await supabase
       .from('matches')
-      .update({ status: 'live' })
+      .update({ status: 'live', timer_started_at: new Date().toISOString() })
       .eq('id', match.id);
   };
 
