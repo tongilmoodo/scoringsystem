@@ -268,7 +268,7 @@ export default function JudgePage() {
   const btn = 'min-h-[120px] rounded-xl font-headline text-2xl font-bold transition active:scale-95 active:brightness-125 disabled:opacity-30 disabled:pointer-events-none';
   const judgesConnected = new Set(votes.map((v) => v.judge_id)).size;
 
-  const isFormEvent = match.events?.category.includes('form_bon_kata') || match.events?.category.includes('special_techniques');
+  const isFormEvent = match.events?.category?.includes('form_bon_kata') || match.events?.category?.includes('special_techniques');
 
   if (isFormEvent) {
     return (

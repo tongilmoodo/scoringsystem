@@ -104,11 +104,6 @@ export default function FormJudgeView({
                 <button onClick={() => applyDeduction(2)} className={`${btn} bg-red-700`}>-0.2</button>
                 <button onClick={() => applyDeduction(3)} className={`${btn} bg-red-800`}>-0.3</button>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <button onClick={() => applyAddition(1)} className={`${btn} bg-green-600`}>+0.1</button>
-                <button onClick={() => applyAddition(2)} className={`${btn} bg-green-700`}>+0.2</button>
-                <button onClick={() => applyAddition(3)} className={`${btn} bg-green-800`}>+0.3</button>
-              </div>
               <button 
                 onClick={submitScore} 
                 className={`${btn} bg-blue-600 hover:bg-blue-500 mt-4 min-h-[120px] text-4xl`}

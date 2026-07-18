@@ -74,7 +74,7 @@ export default function ResultsPage() {
   }, {} as Record<string, Match[]>);
 
   Object.values(byEvent).forEach((matches) => {
-    const isForm = matches.some((m) => m.event?.category.includes('form_bon_kata') || m.event?.category.includes('special_techniques'));
+    const isForm = matches.some((m) => m.event?.category?.includes('form_bon_kata') || m.event?.category?.includes('special_techniques'));
     
     if (isForm) {
       // Rank by blue_score descending
