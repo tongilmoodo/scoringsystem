@@ -228,17 +228,6 @@ export default function ControllerPage() {
     ? Math.max(0, match.takedown_timer_seconds - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
     : 0;
 
-  if (match && (match.events?.category?.includes('form_bon_kata') || match.events?.category?.includes('special_techniques'))) {
-    return (
-      <FormControlView 
-        match={match} 
-        user={user} 
-        tournament={tournament} 
-        court={court} 
-        logout={logout} 
-      />
-    );
-  }
 
   // --- Derived Match State for Sparring ---
   const roundRemaining = match?.timer_paused_at
@@ -477,6 +466,18 @@ export default function ControllerPage() {
         <h1 className="text-2xl font-bold">Court {court === 1 ? 'A' : 'B'} &mdash; Controller</h1>
         <p className="text-gray-400">Waiting for the admin to assign a match&hellip;</p>
       </main>
+    );
+  }
+
+  if (match.events?.category?.includes('form_bon_kata') || match.events?.category?.includes('special_techniques')) {
+    return (
+      <FormControlView 
+        match={match} 
+        user={user} 
+        tournament={tournament} 
+        court={court} 
+        logout={logout} 
+      />
     );
   }
 
