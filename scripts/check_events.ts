@@ -2,25 +2,24 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
-const ATHLETE_SELECT = '*, blue:athletes!matches_blue_athlete_id_fkey(*), red:athletes!matches_red_athlete_id_fkey(*), events:events(*)';
-
 async function run() {
-  const { data, error } = await supabase
+  // Delete ALL matches that have null blue_athlete_id (bad/corrupt matches)
+  const { data: bad, error: fetchErr } = await supabase
     .from('matches')
-    .select(ATHLETE_SELECT);
+    .select('id, match_number, blue_athlete_id, red_athlete_id, status')
+    .is('blue_athlete_id', null);
 
-  const formMatchesWithRed = data?.filter(m => 
-    m.events?.category?.includes('form') && m.red_athlete_id !== null
-  );
+  if (fetchErr) { console.error('Fetch error:', fetchErr); return; }
+  console.log(`Found ${bad?.length ?? 0} matches with null blue_athlete_id:`, bad);
 
-  console.log('Form matches with Red athlete:', formMatchesWithRed?.length);
-  if (formMatchesWithRed?.length) {
-    console.log(JSON.stringify(formMatchesWithRed, null, 2));
-    
-    // Delete them
-    const ids = formMatchesWithRed.map(m => m.id);
-    await supabase.from('matches').delete().in('id', ids);
-    console.log('Deleted bad matches.');
+  if (bad && bad.length > 0) {
+    const ids = bad.map(m => m.id);
+    const { error: delErr } = await supabase.from('matches').delete().in('id', ids);
+    if (delErr) {
+      console.error('Delete error:', delErr);
+    } else {
+      console.log(`Deleted ${ids.length} bad matches.`);
+    }
   }
 }
 run();

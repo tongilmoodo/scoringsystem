@@ -178,6 +178,38 @@ export default function DrawPage() {
     }
   }
 
+  async function assignFormToCourt(courtNum: number) {
+    if (!selected) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const sorted = [...matches].sort((a, b) => a.match_number - b.match_number);
+      if (sorted.length === 0) throw new Error('No matches to assign. Generate the draw first.');
+
+      // Set court number for all matches in this event
+      const { error: courtErr } = await supabase
+        .from('matches')
+        .update({ court_number: courtNum })
+        .eq('event_id', selected);
+      if (courtErr) throw new Error(`Court assignment failed: ${courtErr.message}`);
+
+      // Mark only the first (lowest match_number) match as 'assigned' so the controller picks it up
+      const firstMatch = sorted.find(m => m.status === 'scheduled') ?? sorted[0];
+      const { error: assignErr } = await supabase
+        .from('matches')
+        .update({ status: 'assigned' })
+        .eq('id', firstMatch.id);
+      if (assignErr) throw new Error(`Status update failed: ${assignErr.message}`);
+
+      await loadMatches();
+      setSuccessMsg(`✓ All matches assigned to Court ${courtNum === 1 ? 'A' : 'B'}. Match #${firstMatch.match_number} (${firstMatch.blue?.name ?? 'Athlete'}) is now live on the controller and scoreboard.`);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function publish() {
     if (!selected) return;
     setError(null);
@@ -283,6 +315,62 @@ export default function DrawPage() {
       {selected && (
         <div className="rounded-xl border border-gray-800 bg-gray-950 p-4">
           <BracketView matches={matches} onSelect={setDetail} />
+        </div>
+      )}
+
+      {/* Form event: court assignment panel */}
+      {selected && currentEvent && (currentEvent.category.includes('form_bon_kata') || currentEvent.category.includes('special_techniques')) && matches.length > 0 && (
+        <div className="rounded-xl border border-yellow-700 bg-yellow-950 p-4">
+          <h2 className="mb-3 font-bold text-yellow-300">📋 Form Event — Court Assignment</h2>
+          <p className="mb-4 text-sm text-yellow-200">
+            Assign all matches to a court so the Controller, Judge, and Scoreboard can pick them up.
+            The first <strong>scheduled</strong> match will be automatically set to <strong>assigned</strong>.
+          </p>
+          <div className="flex gap-3 mb-6">
+            <button
+              disabled={busy}
+              onClick={() => assignFormToCourt(1)}
+              className="rounded-lg bg-green-700 px-6 py-3 font-bold text-white disabled:opacity-40 hover:bg-green-600"
+            >
+              {busy ? 'Working…' : '→ Assign to Court A'}
+            </button>
+            <button
+              disabled={busy}
+              onClick={() => assignFormToCourt(2)}
+              className="rounded-lg bg-blue-700 px-6 py-3 font-bold text-white disabled:opacity-40 hover:bg-blue-600"
+            >
+              {busy ? 'Working…' : '→ Assign to Court B'}
+            </button>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-yellow-400 border-b border-yellow-800">
+                <th className="pb-2 pr-4">#</th>
+                <th className="pb-2 pr-4">Athlete</th>
+                <th className="pb-2 pr-4">Court</th>
+                <th className="pb-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...matches].sort((a, b) => a.match_number - b.match_number).map(m => (
+                <tr key={m.id} className="border-b border-yellow-900/50">
+                  <td className="py-2 pr-4 font-mono text-yellow-300">{m.match_number}</td>
+                  <td className="py-2 pr-4 text-white font-semibold">{m.blue?.name ?? 'TBD'}</td>
+                  <td className="py-2 pr-4 text-gray-300">{m.court_number ? `Court ${m.court_number === 1 ? 'A' : 'B'}` : '—'}</td>
+                  <td className="py-2">
+                    <span className={`inline-block rounded px-2 py-0.5 text-xs font-bold ${
+                      m.status === 'completed' ? 'bg-green-800 text-green-300' :
+                      m.status === 'assigned' ? 'bg-yellow-700 text-yellow-200 animate-pulse' :
+                      m.status === 'live' ? 'bg-red-700 text-red-200 animate-pulse' :
+                      'bg-gray-800 text-gray-400'
+                    }`}>
+                      {m.status.toUpperCase()}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
