@@ -15,6 +15,7 @@ import PinPad from '@/components/PinPad';
 import Flag from '@/components/Flag';
 import BroadcastBanner from '@/components/BroadcastBanner';
 import { ConnectionDot } from '@/components/ui/StatusBadge';
+import { useServerTimeOffset } from '@/lib/useServerTime';
 import FormJudgeView from '@/components/FormJudgeView';
 import {
   ATHLETE_SELECT,
@@ -45,12 +46,7 @@ function tallyText(votes: JudgeVote[], side: Side) {
   pending.forEach((v) => {
     counts[v.action_type] = (counts[v.action_type] ?? 0) + 1;
   });
-  return (
-    Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .map(([a, c]) => `${label(a)} (${c})`)
-      .join(' \u00b7 ') + ' \u2014 need 3'
-  );
+  return `${ACTIONS.map((a) => (counts[a] ? `${label(a)}(${counts[a]})` : '')).filter(Boolean).join(', ')}`;
 }
 
 export default function JudgePage() {
@@ -60,6 +56,7 @@ export default function JudgePage() {
   const { tournament, loading } = useTournamentBySlug(slug);
   const { user, ready, login, logout } = useAuth();
   const { votes: queued, enqueue, clear } = useOfflineQueue();
+  const serverOffset = useServerTimeOffset();
 
   const [match, setMatch] = useState<Match | null>(null);
   const [votes, setVotes] = useState<JudgeVote[]>([]);
@@ -157,15 +154,16 @@ export default function JudgePage() {
   // Read-only clock + break/takedown countdowns.
   useEffect(() => {
     const timer = setInterval(() => {
-      setNow(Date.now());
+      const serverDateNow = Date.now() + serverOffset;
+      setNow(serverDateNow);
       if (!match) return;
       if (match.status === 'live' && match.timer_started_at) {
-        const elapsed = Math.floor((Date.now() - new Date(match.timer_started_at).getTime()) / 1000);
+        const elapsed = Math.floor((serverDateNow - new Date(match.timer_started_at).getTime()) / 1000);
         setRemaining(Math.max(0, match.timer_seconds - elapsed));
       } else setRemaining(match.timer_seconds);
     }, 500);
     return () => clearInterval(timer);
-  }, [match]);
+  }, [match, serverOffset]);
 
   useEffect(() => {
     const on = () => setOnline(true);

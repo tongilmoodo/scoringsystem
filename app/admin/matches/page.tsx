@@ -406,4 +406,3 @@ export default function MatchesPage() {
       <MatchesContent />
     </Suspense>
   );
-}

@@ -7,6 +7,7 @@ import { getFlagUrl, countryName } from '@/lib/countries';
 import { ATHLETE_SELECT, formatTime, ROUND_LABELS, type Match, type Side } from '@/lib/types';
 import { audio } from '@/lib/audio';
 import FormScoreboard from '@/components/FormScoreboard';
+import { useServerTimeOffset } from '@/lib/useServerTime';
 
 const FORM_CATEGORIES = ['form_bon_kata', 'special_techniques', 'team_form_bon_kata', 'team_special_techniques'];
 
@@ -34,6 +35,7 @@ export default function CourtDisplay({
   big?: boolean;
 }) {
   const { t } = useTranslation(LABELS);
+  const serverOffset = useServerTimeOffset();
   const [match, setMatch] = useState<Match | null>(null);
   const [remaining, setRemaining] = useState(0);
   const [now, setNow] = useState(Date.now());
@@ -69,7 +71,7 @@ export default function CourtDisplay({
         .select(ATHLETE_SELECT)
         .in('event_id', evIds)
         .eq('court_number', court)
-        .eq('status', 'completed')
+        .in('status', ['completed', 'withdrawal', 'forfeit', 'disqualification'])
         .order('ended_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -121,15 +123,16 @@ export default function CourtDisplay({
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setNow(Date.now());
+      const serverDateNow = Date.now() + serverOffset;
+      setNow(serverDateNow);
       if (!match) return;
       if (match.status === 'live' && match.timer_started_at) {
-        const elapsed = Math.floor((Date.now() - new Date(match.timer_started_at).getTime()) / 1000);
+        const elapsed = Math.floor((serverDateNow - new Date(match.timer_started_at).getTime()) / 1000);
         setRemaining(Math.max(0, match.timer_seconds - elapsed));
       } else setRemaining(match.timer_seconds);
     }, 250);
     return () => clearInterval(timer);
-  }, [match]);
+  }, [match, serverOffset]);
 
   const courtLabel = `${t('Court').toUpperCase()} ${court === 1 ? 'A' : 'B'}`;
 
@@ -157,7 +160,7 @@ export default function CourtDisplay({
   const takedownRemaining = takedownActive && match.timer_paused_at
     ? Math.max(0, match.takedown_timer_seconds - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
     : 0;
-  const completed = match.status === 'completed';
+  const completed = ['completed', 'withdrawal', 'forfeit', 'disqualification'].includes(match.status);
   const winnerSide: Side | null = completed
     ? match.winner_id === match.blue_athlete_id
       ? 'blue'

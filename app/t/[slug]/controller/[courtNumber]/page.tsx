@@ -16,6 +16,7 @@ import Flag from '@/components/Flag';
 import SoundToggle from '@/components/ui/SoundToggle';
 import BroadcastBanner from '@/components/BroadcastBanner';
 import { ConnectionDot, StatusBadge, type BadgeState } from '@/components/ui/StatusBadge';
+import { useServerTimeOffset } from '@/lib/useServerTime';
 import FormControlView from '@/components/FormControlView';
 import {
   ACTION_LABELS,
@@ -52,6 +53,7 @@ export default function ControllerPage() {
   const court = Number(params.courtNumber);
   const { tournament, loading } = useTournamentBySlug(slug);
   const { user, ready, login, logout } = useAuth();
+  const serverOffset = useServerTimeOffset();
 
   const [match, setMatch] = useState<Match | null>(null);
   const [votes, setVotes] = useState<JudgeVote[]>([]);
@@ -185,19 +187,20 @@ export default function ControllerPage() {
   useEffect(() => {
     if (!running) return;
     let lastTick = -1;
-    const localAnchor = Date.now();
+    const localAnchor = Date.now() + serverOffset;
     const initialDuration = remainingRef.current;
 
     const timer = setInterval(() => {
+      const serverDateNow = Date.now() + serverOffset;
       const m = matchRef.current;
       if (!m) return;
       
       let r = initialDuration;
       if (m.timer_started_at) {
-         const elapsed = Math.floor((Date.now() - new Date(m.timer_started_at).getTime()) / 1000);
+         const elapsed = Math.floor((serverDateNow - new Date(m.timer_started_at).getTime()) / 1000);
          r = Math.max(0, m.timer_seconds - elapsed);
       } else {
-         const elapsed = Math.floor((Date.now() - localAnchor) / 1000);
+         const elapsed = Math.floor((serverDateNow - localAnchor) / 1000);
          r = Math.max(0, initialDuration - elapsed);
       }
       
@@ -213,7 +216,7 @@ export default function ControllerPage() {
         playBuzzer();
         supabase
           .from('matches')
-          .update({ status: 'paused', timer_started_at: null, timer_paused_at: new Date().toISOString(), timer_seconds: 0 })
+          .update({ status: 'paused', timer_started_at: null, timer_paused_at: new Date(Date.now() + serverOffset).toISOString(), timer_seconds: 0 })
           .eq('id', m.id);
         pushLog('TIME UP');
         clearInterval(timer);
@@ -221,13 +224,13 @@ export default function ControllerPage() {
     }, 200);
 
     return () => clearInterval(timer);
-  }, [running]);
+  }, [running, serverOffset]);
 
   // Shared wall-clock tick for break/takedown countdowns.
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 500);
+    const t = setInterval(() => setNow(Date.now() + serverOffset), 500);
     return () => clearInterval(t);
-  }, []);
+  }, [serverOffset]);
 
   const breakActive = match?.status === 'break';
   // Break countdown derives from the server-persisted break_started_at so it

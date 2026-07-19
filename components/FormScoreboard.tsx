@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { getFlagUrl, countryName } from '@/lib/countries';
 import { ATHLETE_SELECT, formatTime, type Match } from '@/lib/types';
+import { useServerTimeOffset } from '@/lib/useServerTime';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
@@ -33,6 +34,7 @@ export default function FormScoreboard({
   tournamentId: string;
   big?: boolean;
 }) {
+  const serverOffset = useServerTimeOffset();
   const [match, setMatch] = useState<Match | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
   const [remaining, setRemaining] = useState(0);
@@ -54,7 +56,7 @@ export default function FormScoreboard({
       country_code: m.blue?.country_code ?? null,
       team: m.blue?.team ?? null,
       score: m.blue_score ?? 0,
-      completed: m.status === 'completed',
+      completed: ['completed', 'withdrawal', 'forfeit', 'disqualification'].includes(m.status),
     }));
 
     // Sort: completed first (by score desc), then pending
@@ -93,7 +95,7 @@ export default function FormScoreboard({
         .select(ATHLETE_SELECT)
         .in('event_id', evIds)
         .eq('court_number', court)
-        .eq('status', 'completed')
+        .in('status', ['completed', 'withdrawal', 'forfeit', 'disqualification'])
         .order('ended_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -121,14 +123,15 @@ export default function FormScoreboard({
     const timer = setInterval(() => {
       if (!match) return;
       if (match.status === 'live' && match.timer_started_at) {
-        const elapsed = Math.floor((Date.now() - new Date(match.timer_started_at).getTime()) / 1000);
+        const serverDateNow = Date.now() + serverOffset;
+        const elapsed = Math.floor((serverDateNow - new Date(match.timer_started_at).getTime()) / 1000);
         setRemaining(Math.max(0, match.timer_seconds - elapsed));
       } else {
         setRemaining(match.timer_seconds);
       }
     }, 250);
     return () => clearInterval(timer);
-  }, [match]);
+  }, [match, serverOffset]);
 
   if (!match) {
     return (

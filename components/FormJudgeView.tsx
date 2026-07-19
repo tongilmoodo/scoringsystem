@@ -5,6 +5,7 @@ import Flag from '@/components/Flag';
 import { formatTime, type Match } from '@/lib/types';
 import { ConnectionDot } from '@/components/ui/StatusBadge';
 import { type AppUser } from '@/lib/useAuth';
+import { useServerTimeOffset } from '@/lib/useServerTime';
 
 export default function FormJudgeView({
   match: initialMatch,
@@ -21,6 +22,7 @@ export default function FormJudgeView({
   online: boolean;
   logout: () => void;
 }) {
+  const serverOffset = useServerTimeOffset();
   // Track live match status via realtime so the judge reacts to START/NEXT
   const [match, setMatch] = useState<Match>(initialMatch);
   
@@ -34,14 +36,15 @@ export default function FormJudgeView({
     const timer = setInterval(() => {
       if (!match) return;
       if (match.status === 'live' && match.timer_started_at) {
-        const elapsed = Math.floor((Date.now() - new Date(match.timer_started_at).getTime()) / 1000);
+        const serverDateNow = Date.now() + serverOffset;
+        const elapsed = Math.floor((serverDateNow - new Date(match.timer_started_at).getTime()) / 1000);
         setRemaining(Math.max(0, match.timer_seconds - elapsed));
       } else {
         setRemaining(match.timer_seconds);
       }
     }, 250);
     return () => clearInterval(timer);
-  }, [match]);
+  }, [match, serverOffset]);
 
   // Sync match status
   useEffect(() => {
