@@ -149,8 +149,9 @@ export default function CourtDisplay({
   }
 
   const breakActive = match.status === 'break';
-  const breakRemaining = breakActive && match.timer_paused_at
-    ? Math.max(0, match.break_timer_seconds - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
+  const breakAnchor = match.break_started_at ?? match.timer_paused_at ?? null;
+  const breakRemaining = breakActive && breakAnchor
+    ? Math.max(0, match.break_timer_seconds - Math.floor((now - new Date(breakAnchor).getTime()) / 1000))
     : 0;
   const takedownActive = match.status === 'takedown';
   const completed = match.status === 'completed';
