@@ -181,28 +181,45 @@ export default function ControllerPage() {
     // Disqualification prompt removed as per new rules (3 fouls = -1 point)
   }, [match, dqDismissed]);
 
-  // Round clock countdown; last-10s ticks; auto-pause + buzzer at zero.
+  // Round clock countdown; syncs with match.timer_started_at for precise alignment with scoreboard.
   useEffect(() => {
     if (!running) return;
+    let lastTick = -1;
+    const localAnchor = Date.now();
+    const initialDuration = remainingRef.current;
+
     const timer = setInterval(() => {
-      setRemaining((r) => {
-        if (r > 1 && r <= 11) playTick();
-        if (r <= 1) {
-          setRunning(false);
-          playBuzzer();
-          const m = matchRef.current;
-          if (m) {
-            supabase
-              .from('matches')
-              .update({ status: 'paused', timer_started_at: null, timer_seconds: 0 })
-              .eq('id', m.id);
-          }
-          pushLog('TIME UP');
-          return 0;
-        }
-        return r - 1;
-      });
-    }, 1000);
+      const m = matchRef.current;
+      if (!m) return;
+      
+      let r = initialDuration;
+      if (m.timer_started_at) {
+         const elapsed = Math.floor((Date.now() - new Date(m.timer_started_at).getTime()) / 1000);
+         r = Math.max(0, m.timer_seconds - elapsed);
+      } else {
+         const elapsed = Math.floor((Date.now() - localAnchor) / 1000);
+         r = Math.max(0, initialDuration - elapsed);
+      }
+      
+      setRemaining(r);
+      
+      if (r > 0 && r <= 10 && r !== lastTick) {
+        playTick();
+        lastTick = r;
+      }
+      
+      if (r <= 0) {
+        setRunning(false);
+        playBuzzer();
+        supabase
+          .from('matches')
+          .update({ status: 'paused', timer_started_at: null, timer_paused_at: new Date().toISOString(), timer_seconds: 0 })
+          .eq('id', m.id);
+        pushLog('TIME UP');
+        clearInterval(timer);
+      }
+    }, 200);
+
     return () => clearInterval(timer);
   }, [running]);
 
