@@ -178,8 +178,7 @@ export default function ControllerPage() {
 
   useEffect(() => {
     if (!match || match.status === 'completed') return;
-    if (match.blue_fouls >= MAX_FOULS && !dqDismissed.blue) setDqSide('blue');
-    else if (match.red_fouls >= MAX_FOULS && !dqDismissed.red) setDqSide('red');
+    // Disqualification prompt removed as per new rules (3 fouls = -1 point)
   }, [match, dqDismissed]);
 
   // Round clock countdown; last-10s ticks; auto-pause + buzzer at zero.
@@ -565,7 +564,7 @@ export default function ControllerPage() {
                 <p className="text-2xl font-bold">{athlete?.name ?? 'TBD'}</p>
                 <p className="flex items-center justify-center gap-2 text-white/80"><Flag code={athlete?.country_code} size={24} /><span>{athlete?.team ?? ''}</span></p>
                 <p className="text-8xl font-black tabular-nums">{score}</p>
-                <p className="text-white/80">Fouls: {fouls} / {MAX_FOULS}</p>
+                <p className="text-white/80">Fouls: {fouls}</p>
               </div>
               <div className="rounded bg-black/30 p-2 text-center text-sm">
                 <p className="font-bold">{side.toUpperCase()} votes</p>
