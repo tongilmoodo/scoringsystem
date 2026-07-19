@@ -43,7 +43,7 @@ function MatchesContent() {
     
     const { data } = await supabase
       .from('matches')
-      .select(`${ATHLETE_SELECT}, events(name, category, weight_class, division)`)
+      .select(ATHLETE_SELECT)
       .in('event_id', eventIds)
       .order('match_number');
       
