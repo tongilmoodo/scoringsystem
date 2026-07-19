@@ -102,6 +102,18 @@ export default function AthletesPage() {
     });
   }
 
+  function duplicate(a: Athlete) {
+    setEditingId(null);
+    setForm({
+      name: a.name,
+      team: a.team ?? '',
+      country_code: a.country_code ?? '',
+      event_id: '', // Leave blank so they select the new event
+      seed: '',
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   // ---- Bulk CSV import (columns: Name, Team, Country, Event) --------------
   // Country is validated against the COUNTRIES list by name OR code.
   function parseCsv() {
@@ -314,8 +326,9 @@ export default function AthletesPage() {
                 <td className="p-3">{a.seed}</td>
                 <td className="p-3">{a.lot_number}</td>
                 <td className="p-3">
-                  <button onClick={() => edit(a)} className="mr-2 text-blue-400 underline">Edit</button>
-                  <button onClick={() => remove(a.id)} className="text-red-400 underline">Delete</button>
+                  <button onClick={() => edit(a)} className="mr-2 text-blue-400 underline hover:text-blue-300">Edit</button>
+                  <button onClick={() => duplicate(a)} className="mr-2 text-green-400 underline hover:text-green-300">Duplicate</button>
+                  <button onClick={() => remove(a.id)} className="text-red-400 underline hover:text-red-300">Delete</button>
                 </td>
               </tr>
             ))}

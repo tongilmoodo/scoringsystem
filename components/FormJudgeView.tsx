@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Flag from '@/components/Flag';
-import { type Match } from '@/lib/types';
+import { formatTime, type Match } from '@/lib/types';
 import { ConnectionDot } from '@/components/ui/StatusBadge';
 import { type AppUser } from '@/lib/useAuth';
 
@@ -23,39 +23,49 @@ export default function FormJudgeView({
 }) {
   // Track live match status via realtime so the judge reacts to START/NEXT
   const [match, setMatch] = useState<Match>(initialMatch);
-  const [score, setScore] = useState<number>(100); // 10.0
+  
+  const [score, setScore] = useState(100); // Internal is 10.0 => 100
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Sync when parent passes a new match (e.g. after auto-advance)
+  const [remaining, setRemaining] = useState(match.timer_seconds ?? 0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (!match) return;
+      if (match.status === 'live' && match.timer_started_at) {
+        const elapsed = Math.floor((Date.now() - new Date(match.timer_started_at).getTime()) / 1000);
+        setRemaining(Math.max(0, match.timer_seconds - elapsed));
+      } else {
+        setRemaining(match.timer_seconds);
+      }
+    }, 250);
+    return () => clearInterval(timer);
+  }, [match]);
+
+  // Sync match status
   useEffect(() => {
     setMatch(initialMatch);
     setScore(100);
     setSubmitted(false);
-    setError(null);
-  }, [initialMatch.id]);
+  }, [initialMatch]);
 
-  // Subscribe to live status changes on this match
   useEffect(() => {
     const ch = supabase
-      .channel(`match_status_judge:${match.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` },
-        (payload) => {
-          setMatch((prev) => ({ ...prev, ...payload.new } as Match));
-        }
-      )
+      .channel(`judge-${match.id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` }, (payload) => {
+        setMatch(payload.new as Match);
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [match.id]);
 
-  const formatScore = (val: number) => (val / 10).toFixed(1);
-
-  const applyDeduction = (amount: number) => {
+  const applyDeduction = (points: number) => {
     if (submitted || match.status !== 'live') return;
-    setScore((prev) => Math.max(0, prev - amount));
+    setScore((s) => Math.max(0, s - points));
   };
+
+  const formatScore = (val: number) => (val / 10).toFixed(1);
 
   const submitScore = async () => {
     if (submitted) return;
@@ -83,8 +93,13 @@ export default function FormJudgeView({
       {/* Top bar */}
       <div className="flex items-center justify-between rounded-lg bg-gray-900 px-4 py-2 text-sm">
         <span className="font-bold">Court {court === 1 ? 'A' : 'B'} &middot; Judge</span>
-        <span>Form / Special Techniques &middot; Match {match.match_number}</span>
-        <ConnectionDot connected={4} />
+        <span>{match.events?.name ?? 'Form / Special Techniques'} &middot; Match {match.match_number}</span>
+        <div className="flex items-center gap-4">
+          <ConnectionDot connected={4} />
+          <span className="font-mono font-bold tabular-nums text-white text-xl">
+            {formatTime(remaining)}
+          </span>
+        </div>
         <span
           className={`rounded px-2 py-1 text-xs font-bold ${
             isCompleted ? 'bg-green-700 text-white' : match.status === 'live' ? 'bg-blue-500 text-white animate-pulse' : 'bg-yellow-600 text-black'

@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Flag from '@/components/Flag';
-import { type Match } from '@/lib/types';
+import { ATHLETE_SELECT, formatTime, type Match } from '@/lib/types';
 import { ConnectionDot } from '@/components/ui/StatusBadge';
 import { type AppUser } from '@/lib/useAuth';
 
@@ -19,53 +19,80 @@ export default function FormControlView({
   court: number;
   logout: () => void;
 }) {
-  const online = typeof navigator !== 'undefined' ? navigator.onLine : true;
+  const [online, setOnline] = useState(false);
   const [scores, setScores] = useState<any[]>([]);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [nextMatch, setNextMatch] = useState<Match | null>(null);
 
-  const loadScores = useCallback(async () => {
-    if (!match) return;
-    const { data } = await supabase
-      .from('form_scores')
-      .select('score, judge_id')
-      .eq('match_id', match.id);
-    setScores(data || []);
-  }, [match?.id]);
-
-  // Load next scheduled match for this event on this court
-  const loadNextMatch = useCallback(async () => {
-    if (!match) return;
-    const { data } = await supabase
-      .from('matches')
-      .select('id, match_number, blue_athlete_id, blue:athletes!matches_blue_athlete_id_fkey(name, country_code, team)')
-      .eq('event_id', match.event_id)
-      .eq('court_number', court)
-      .in('status', ['scheduled', 'assigned'])
-      .neq('id', match.id)
-      .order('match_number')
-      .limit(1)
-      .maybeSingle();
-    setNextMatch((data as Match | null) ?? null);
-  }, [match?.id, match?.event_id, court]);
+  const [remaining, setRemaining] = useState(match.timer_seconds ?? 0);
 
   useEffect(() => {
-    loadScores();
-    loadNextMatch();
-    if (!match) return;
+    const timer = setInterval(() => {
+      if (!match) return;
+      if (match.status === 'live' && match.timer_started_at) {
+        const elapsed = Math.floor((Date.now() - new Date(match.timer_started_at).getTime()) / 1000);
+        setRemaining(Math.max(0, match.timer_seconds - elapsed));
+      } else {
+        setRemaining(match.timer_seconds);
+      }
+    }, 250);
+    return () => clearInterval(timer);
+  }, [match]);
+
+  useEffect(() => {
+    setOnline(true);
+    // Load initial scores
+    supabase
+      .from('form_scores')
+      .select('*')
+      .eq('match_id', match.id)
+      .then(({ data }) => {
+        if (data) setScores(data);
+      });
+
+    // Load next match
+    supabase
+      .from('matches')
+      .select(ATHLETE_SELECT)
+      .eq('event_id', match.event_id)
+      .eq('status', 'scheduled')
+      .order('match_number', { ascending: true })
+      .limit(1)
+      .then(({ data }) => {
+        if (data?.[0]) setNextMatch(data[0] as Match);
+      });
+
     const ch = supabase
-      .channel(`form_scores:${match.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'form_scores', filter: `match_id=eq.${match.id}` },
-        () => loadScores()
-      )
+      .channel(`ctrl-${match.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'form_scores', filter: `match_id=eq.${match.id}` }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setScores((prev) => [...prev.filter((s) => s.judge_id !== payload.new.judge_id), payload.new]);
+        }
+      })
       .subscribe();
+
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [match?.id, loadScores, loadNextMatch]);
+  }, [match.id, match.event_id]);
+
+  const commitAverage = async () => {
+    if (scores.length === 0) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const avg = Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length);
+      const { error: err } = await supabase.rpc('commit_form_match', {
+        p_match_id: match.id,
+        p_final_score: avg,
+      });
+      if (err) throw err;
+    } catch (e: any) {
+      setError(e.message ?? 'Failed to commit score');
+      setSubmitting(false);
+    }
+  };
 
   const startPerformance = async () => {
     if (!match) return;
@@ -75,26 +102,8 @@ export default function FormControlView({
       .eq('id', match.id);
   };
 
-  const commitAverage = async () => {
-    if (!match || scores.length === 0) return;
-    setSubmitting(true);
-    try {
-      const { data, error: err } = await supabase.rpc('commit_form_average', {
-        p_match_id: match.id,
-        p_controller_name: user?.name ?? 'controller',
-      });
-      if (err) throw err;
-      if (!data.success) throw new Error(data.message || 'Failed to commit average');
-      await loadNextMatch();
-    } catch (e: any) {
-      setError(e.message ?? 'Error committing score');
-      setSubmitting(false);
-    }
-  };
-
   const advanceToNextMatch = async () => {
     if (!nextMatch) return;
-    // Mark next match as assigned so judges/scoreboard pick it up
     await supabase
       .from('matches')
       .update({ status: 'assigned', court_number: court })
@@ -123,7 +132,6 @@ export default function FormControlView({
 
   const athlete = match.blue;
   const isCompleted = match.status === 'completed';
-  const isLive = match.status === 'live' || match.status === 'assigned';
   const avgScore =
     scores.length > 0
       ? Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length)
@@ -134,8 +142,13 @@ export default function FormControlView({
       {/* Top bar */}
       <div className="flex items-center justify-between rounded-lg bg-gray-900 px-4 py-2 text-sm">
         <span className="font-bold">Court {court === 1 ? 'A' : 'B'} &middot; Controller</span>
-        <span>Form / Special Techniques &middot; Match {match.match_number}</span>
-        <ConnectionDot connected={scores.length} />
+        <span>{match.events?.name ?? 'Form / Special Techniques'} &middot; Match {match.match_number}</span>
+        <div className="flex items-center gap-4">
+          <ConnectionDot connected={scores.length} />
+          <span className="font-mono font-bold tabular-nums text-white text-xl">
+            {formatTime(remaining)}
+          </span>
+        </div>
         <span className={online ? 'text-success' : 'font-bold text-warning'}>
           {online ? 'Online' : 'Offline'}
         </span>
