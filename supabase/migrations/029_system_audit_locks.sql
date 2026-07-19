@@ -81,9 +81,9 @@ BEGIN
 
   -- Determine next match
   IF v_match.next_match_id IS NOT NULL THEN
-    IF v_match.is_next_match_blue THEN
+    IF v_match.next_match_position = 'blue' THEN
       UPDATE matches SET blue_athlete_id = v_winner_id WHERE id = v_match.next_match_id;
-    ELSE
+    ELSIF v_match.next_match_position = 'red' THEN
       UPDATE matches SET red_athlete_id = v_winner_id WHERE id = v_match.next_match_id;
     END IF;
   END IF;

@@ -83,9 +83,9 @@ export default function FormControlView({
     setError(null);
     try {
       const avg = Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length);
-      const { error: err } = await supabase.rpc('commit_form_match', {
+      const { error: err } = await supabase.rpc('commit_form_average', {
         p_match_id: match.id,
-        p_final_score: avg,
+        p_controller_name: user?.name ?? 'Controller',
       });
       if (err) throw err;
     } catch (e: any) {

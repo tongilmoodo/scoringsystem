@@ -161,7 +161,7 @@ export default function DrawPage() {
       if (delErr) throw new Error(`Delete matches failed: ${delErr.message}`);
 
       // 2. Reset event bracket status
-      const { error: evErr } = await supabase.from('events').update({ bracket_status: null }).eq('id', selected);
+      const { error: evErr } = await supabase.from('events').update({ bracket_status: 'draft' }).eq('id', selected);
       if (evErr) throw new Error(`Status update failed: ${evErr.message}`);
 
       // 3. Clear lot numbers from athletes

@@ -31,7 +31,7 @@ import {
 const ACTIONS: ScoreActionType[] = ['point_1', 'point_2', 'point_3', 'foul'];
 const WIN_METHODS = ['points', 'ko', 'tko', 'disqualification', 'withdrawal', 'forfeit'] as const;
 const MAX_FOULS = 3;
-const TAKEDOWN_SECONDS = 30;
+const TAKEDOWN_SECONDS = 20;
 
 function label(a: string) {
   return ACTION_LABELS[a as ScoreActionType] ?? a;
