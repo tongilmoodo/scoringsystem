@@ -154,6 +154,9 @@ export default function CourtDisplay({
     ? Math.max(0, match.break_timer_seconds - Math.floor((now - new Date(breakAnchor).getTime()) / 1000))
     : 0;
   const takedownActive = match.status === 'takedown';
+  const takedownRemaining = takedownActive && match.timer_paused_at
+    ? Math.max(0, match.takedown_timer_seconds - Math.floor((now - new Date(match.timer_paused_at).getTime()) / 1000))
+    : 0;
   const completed = match.status === 'completed';
   const winnerSide: Side | null = completed
     ? match.winner_id === match.blue_athlete_id
@@ -242,8 +245,9 @@ export default function CourtDisplay({
 
       {/* Takedown banner */}
       {!breakActive && takedownActive && (
-        <div className="absolute left-0 right-0 top-0 z-20 animate-slide-down bg-danger py-2 text-center">
+        <div className="absolute left-0 right-0 top-0 z-20 flex animate-slide-down flex-row items-center justify-center gap-4 bg-danger py-2 text-center">
           <span className="font-headline text-2xl font-bold uppercase tracking-widest md:text-4xl">Takedown</span>
+          <span className="font-mono text-2xl font-bold tabular-nums md:text-4xl">&mdash; {formatTime(takedownRemaining)}</span>
         </div>
       )}
 

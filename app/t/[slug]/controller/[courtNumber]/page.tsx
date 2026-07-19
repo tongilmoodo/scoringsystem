@@ -262,10 +262,12 @@ export default function ControllerPage() {
     const m = matchRef.current;
     if (!m) return;
     setRunning(false);
-    setRemaining(m.max_time);
+    const isOvertime = m.current_round > (m.total_rounds ?? 1);
+    const resetValue = isOvertime ? 60 : m.max_time;
+    setRemaining(resetValue);
     await supabase
       .from('matches')
-      .update({ timer_started_at: null, timer_paused_at: null, timer_seconds: m.max_time })
+      .update({ timer_started_at: null, timer_paused_at: null, timer_seconds: resetValue })
       .eq('id', m.id);
     pushLog('Timer reset');
   }
@@ -301,7 +303,8 @@ export default function ControllerPage() {
     if (error) { pushLog(`Start round failed: ${error.message}`); return; }
     const res = data as { success?: boolean; error?: string; current_round?: number } | null;
     if (res && res.success === false) { pushLog(res.error ?? 'Cannot start next round'); loadMatch(); return; }
-    setRemaining(m.max_time);
+    const isOvertime = (m.current_round + 1) > (m.total_rounds ?? 1);
+    setRemaining(isOvertime ? 60 : m.max_time);
     setRunning(true);
     audio.playMatchStart();
     pushLog(`Round ${res?.current_round ?? m.current_round + 1} started`);
