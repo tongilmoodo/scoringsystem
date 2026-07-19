@@ -7,6 +7,9 @@
 -- ------------------------------------------------------------
 -- 1. start_takedown
 -- ------------------------------------------------------------
+DROP FUNCTION IF EXISTS start_takedown(UUID, INT);
+DROP FUNCTION IF EXISTS start_takedown(UUID);
+
 CREATE OR REPLACE FUNCTION start_takedown(p_match_id UUID, p_takedown_seconds INT DEFAULT 30)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE v_match RECORD;
