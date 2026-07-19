@@ -350,28 +350,29 @@ export default function ControllerPage() {
   async function endTakedown() {
     const m = matchRef.current;
     if (!m) return;
-    // Restore the exact second saved when the takedown started; fall back
-    // to the local countdown value if the save slot is missing.
-    const saved = m.timer_before_takedown ?? remainingRef.current;
+    
+    const shouldResume = takedownAutoPaused.current;
+    const { data, error } = await supabase.rpc('end_takedown', {
+      p_match_id: m.id,
+      p_auto_resume: shouldResume
+    });
+
+    if (error || !data || data.success === false) {
+      if (error) pushLog(`End takedown failed: ${error.message}`);
+      return;
+    }
+
+    const saved = data.saved_seconds;
     setRemaining(saved);
     remainingRef.current = saved;
-    if (takedownAutoPaused.current) {
+
+    if (shouldResume) {
       takedownAutoPaused.current = false;
       setRunning(true);
       playTimerStart();
       audio.playMatchStart();
-      const { error } = await supabase
-        .from('matches')
-        .update({ status: 'live', timer_started_at: new Date().toISOString(), timer_paused_at: null, timer_seconds: saved, timer_before_takedown: null })
-        .eq('id', m.id);
-      if (error) { setRunning(false); pushLog(`End takedown failed: ${error.message}`); return; }
-    } else {
-      const { error } = await supabase
-        .from('matches')
-        .update({ status: 'paused', timer_paused_at: new Date().toISOString(), timer_seconds: saved, timer_before_takedown: null })
-        .eq('id', m.id);
-      if (error) { pushLog(`End takedown failed: ${error.message}`); return; }
     }
+    
     pushLog(`Takedown window ended \u2014 resumed at ${formatTime(saved)}`);
   }
 
