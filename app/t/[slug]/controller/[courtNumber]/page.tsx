@@ -314,6 +314,15 @@ export default function ControllerPage() {
   async function startTakedown() {
     const m = matchRef.current;
     if (!m) return;
+    
+    // Auto-sync controller timer with DB before starting takedown
+    if (runningRef.current) {
+      await supabase
+        .from('matches')
+        .update({ timer_seconds: remainingRef.current, timer_started_at: null, status: 'paused', timer_paused_at: new Date().toISOString() })
+        .eq('id', m.id);
+    }
+    
     const wasRunning = runningRef.current;
     if (wasRunning) {
       takedownAutoPaused.current = true;
@@ -322,27 +331,19 @@ export default function ControllerPage() {
       takedownAutoPaused.current = false;
     }
     takedownHandled.current = null;
-    const { error } = await supabase
-      .from('matches')
-      .update({ 
-        status: 'takedown',
-        timer_started_at: null,
-        timer_paused_at: new Date().toISOString(),
-        // Persist the exact current second. Without this, the realtime
-        // reload in loadMatch() restores the stale timer_seconds written
-        // at Start (max_time), resetting the clock to 3:00.
-        timer_seconds: remainingRef.current,
-        timer_before_takedown: remainingRef.current,
-        takedown_timer_seconds: TAKEDOWN_SECONDS
-      })
-      .eq('id', m.id);
-    if (error) {
-      // Surface silent failures (RLS / expired session) instead of doing nothing.
+    
+    const { data, error } = await supabase.rpc('start_takedown', {
+      p_match_id: m.id,
+      p_takedown_seconds: TAKEDOWN_SECONDS
+    });
+
+    if (error || !data || data.success === false) {
       takedownAutoPaused.current = false;
       if (wasRunning) setRunning(true);
-      pushLog(`Takedown failed: ${error.message}`);
+      if (error) pushLog(`Takedown failed: ${error.message}`);
       return;
     }
+
     playTakedown();
     pushLog('TAKEDOWN window started (30s)');
   }
