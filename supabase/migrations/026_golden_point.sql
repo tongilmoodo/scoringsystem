@@ -20,9 +20,17 @@ BEGIN
 
   IF p_action_type = 'foul' THEN
     IF p_player_side = 'blue' THEN
-      UPDATE matches SET blue_fouls = blue_fouls + 1, updated_at = NOW() WHERE id = p_match_id;
+      UPDATE matches SET 
+        blue_fouls = blue_fouls + 1, 
+        blue_score = CASE WHEN (blue_fouls + 1) % 3 = 0 THEN blue_score - 1 ELSE blue_score END,
+        updated_at = NOW() 
+      WHERE id = p_match_id;
     ELSE
-      UPDATE matches SET red_fouls = red_fouls + 1, updated_at = NOW() WHERE id = p_match_id;
+      UPDATE matches SET 
+        red_fouls = red_fouls + 1, 
+        red_score = CASE WHEN (red_fouls + 1) % 3 = 0 THEN red_score - 1 ELSE red_score END,
+        updated_at = NOW() 
+      WHERE id = p_match_id;
     END IF;
   ELSE
     IF p_player_side = 'blue' THEN
@@ -113,9 +121,17 @@ BEGIN
 
     IF v_top_action = 'foul' THEN
       IF p_player_side = 'blue' THEN
-        UPDATE matches SET blue_fouls = blue_fouls + 1, updated_at = NOW() WHERE id = p_match_id;
+        UPDATE matches SET 
+          blue_fouls = blue_fouls + 1, 
+          blue_score = CASE WHEN (blue_fouls + 1) % 3 = 0 THEN blue_score - 1 ELSE blue_score END,
+          updated_at = NOW() 
+        WHERE id = p_match_id;
       ELSE
-        UPDATE matches SET red_fouls = red_fouls + 1, updated_at = NOW() WHERE id = p_match_id;
+        UPDATE matches SET 
+          red_fouls = red_fouls + 1, 
+          red_score = CASE WHEN (red_fouls + 1) % 3 = 0 THEN red_score - 1 ELSE red_score END,
+          updated_at = NOW() 
+        WHERE id = p_match_id;
       END IF;
     ELSE
       IF p_player_side = 'blue' THEN
